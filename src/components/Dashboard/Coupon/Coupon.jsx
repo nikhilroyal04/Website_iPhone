@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Text,
-  Button,
   VStack,
   StackDivider,
   useBreakpointValue,
@@ -14,33 +13,25 @@ import {
 import {
   MdKeyboardArrowDown,
   MdOutlineKeyboardArrowUp,
-  MdContentCopy,
 } from "react-icons/md";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  selectcouponData,
+  selectcouponError,
+  selectcouponLoading,
+  fetchcouponData,
+} from "../../../app/Slices/couponSlice";
 
 const Coupon = () => {
   const toast = useToast();
+  const dispatch = useDispatch();
+  const couponData = useSelector(selectcouponData);
+  const couponError = useSelector(selectcouponError);
+  const couponLoading = useSelector(selectcouponLoading);
 
-  // Example coupon data
-  const coupons = [
-    {
-      code: "SUMMER20",
-      description: "20% off on summer collection",
-      additionalDescription: "Enjoy 20% off on all summer items.",
-      details: ["Applicable on COD", "Applicable on UPI"],
-    },
-    {
-      code: "WELCOME10",
-      description: "10% off on your first purchase",
-      additionalDescription: "Welcome! Get 10% off on your first order.",
-      details: ["Applicable on all orders"],
-    },
-    {
-      code: "FREESHIP",
-      description: "Free shipping on orders over $50",
-      additionalDescription: "No shipping charges for orders above $50.",
-      details: ["Applicable on orders above $50"],
-    },
-  ];
+  useEffect(() => {
+    dispatch(fetchcouponData());
+  }, [dispatch]);
 
   // Adjust padding based on breakpoint
   const padding = useBreakpointValue({ base: "4", md: "6" });
@@ -58,7 +49,6 @@ const Coupon = () => {
       .then(() => {
         toast({
           title: "Coupon code copied.",
-          // description: `The code ${code} has been copied to your clipboard.`,
           status: "success",
           duration: 3000,
           isClosable: true,
@@ -67,7 +57,6 @@ const Coupon = () => {
       .catch((err) => {
         toast({
           title: "Failed to copy code.",
-          // description: "There was an error copying the coupon code.",
           status: "error",
           duration: 3000,
           isClosable: true,
@@ -75,6 +64,14 @@ const Coupon = () => {
         console.error("Failed to copy code: ", err);
       });
   };
+
+  if (couponError) {
+    return <div>Error! {couponError.message}</div>;
+  }
+
+  if (couponLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Box p={padding} position="relative" overflowX="auto">
@@ -88,10 +85,10 @@ const Coupon = () => {
         mt={5}
         divider={<StackDivider borderColor="gray.200" />}
       >
-        {coupons.map((coupon, index) => (
+        {couponData.map((coupon, index) => (
           <Box key={index} p={4} borderRadius="md" lineHeight="1.1">
             <Box display="flex" alignItems="center" mb={1}>
-              <Text fontWeight="bold" flex="1" >
+              <Text fontWeight="bold" flex="1">
                 {coupon.code}
               </Text>
               <Text cursor="pointer" onClick={() => handleCopy(coupon.code)}>
@@ -99,10 +96,10 @@ const Coupon = () => {
               </Text>
             </Box>
             <Text mb={2} color="red" fontSize="15px">
-              {coupon.description}
+              {coupon.shortDescription}
             </Text>
             <Text mb={2} fontSize="15px">
-              {coupon.additionalDescription}
+              {coupon.longDescription}
             </Text>
             <Text
               mt={2}
@@ -134,11 +131,9 @@ const Coupon = () => {
             </Text>
             <Collapse in={openIndex === index}>
               <Box pl={4} mt={1}>
-                {coupon.details.slice(0, 1).map((detail, detailIndex) => (
-                  <Text key={detailIndex} mb={1}>
-                    • {detail}
-                  </Text>
-                ))}
+                <Text mb={1}>
+                  Applicable on: {coupon.applicable.join(", ")} {/* Join applicable methods */}
+                </Text>
               </Box>
             </Collapse>
           </Box>

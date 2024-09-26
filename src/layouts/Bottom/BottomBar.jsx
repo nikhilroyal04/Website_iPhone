@@ -15,8 +15,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { FaUser } from "react-icons/fa";
 import { LuArrowUpDown } from "react-icons/lu";
 import { CiFilter } from "react-icons/ci";
-import SortDrawer from "../../components/Products/SortDrawer";
-import FilterDrawer from "../../components/Products/FilterDrawer";
+import SortDrawer from "../../components/Products/Filters/SortDrawer";
+import FilterDrawer from "../../components/Products/Filters/FilterDrawer";
 
 const BottomBar = () => {
   const [activeButton, setActiveButton] = React.useState("home");

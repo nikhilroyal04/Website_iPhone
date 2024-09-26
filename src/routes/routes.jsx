@@ -1,4 +1,5 @@
 import React from "react";
+import { useParams } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
 import FullLayout from "../layouts/FullLayouts";
 import Dashboard from "../components/Dashboard/Dashboard";
@@ -9,7 +10,9 @@ import Refund from "../components/Docx/Refund";
 import TandD from "../components/Docx/TandD";
 import Account from "../components/Account/Account";
 import Categories from "../components/Products/Categories/Categories";
-import Product from "../components/Products/Product";
+import IPhones from "../components/Products/iPhones/iPhones";
+import Androids from "../components/Products/androids/Androids";
+import Accessories from "../components/Products/accessories/Accessories";
 import Cart from "../components/Cart/Cart";
 
 const Routing = () => {
@@ -30,13 +33,29 @@ const Routing = () => {
         <Route path="/terms_and_condition" element={<TandD />} />
         <Route path="/bag" element={<Cart />} />
         <Route path="/categories" element={<Categories />} />
-        <Route path="/categories/:title" element={<Product />} />
+        <Route path="/categories/:name" element={<CategoryHandler />} />
         <Route path="/account" element={<Account />} />
       </Route>
       {/* <Route path="*" element={<Not_Found />} /> */}
     </Routes>
     // </AnimatePresence>
   );
+};
+
+
+const CategoryHandler = () => {
+  const { name } = useParams();
+
+  switch (name.toLowerCase()) {
+    case "iphone":
+      return <IPhones />;
+    case "android":
+      return <Androids />;
+    case "accessories":
+      return <Accessories />;
+    default:
+      return <div>Category not found</div>; // Fallback for unknown categories
+  }
 };
 
 export default Routing;

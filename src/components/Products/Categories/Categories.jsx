@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Box,
   Breadcrumb,
@@ -10,40 +10,47 @@ import {
   Button,
 } from "@chakra-ui/react";
 import { IoArrowForward } from "react-icons/io5";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
+import {
+  selectcategoryData,
+  selectcategoryError,
+  selectcategoryLoading,
+  fetchcategoryData,
+} from "../../../app/Slices/categorySlice";
+import { useSelector, useDispatch } from "react-redux";
+import NoData from "../../NotFound/NoData";
+import Error502 from "../../NotFound/Error502";
+import Loader from "../../NotFound/Loader";
+import Dummy from "../../../assets/images/Dummy.jpg";
 
-// Sample array of image data
-const images = [
-  {
-    id: 1,
-    src: "https://www.thestreet.com/.image/ar_1:1%2Cc_fill%2Ccs_srgb%2Cfl_progressive%2Cq_auto:good%2Cw_1200/MTg4NzEwNjY2NDY1NDUzODA0/1-best-iphones-2022.jpg",
-    alt: "iPhone",
-    title: "iphones", // Added title for navigation
-    buttonText: "View More iPhones",
-  },
-  {
-    id: 2,
-    src: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQAortg1RecNQDKlbsAQwmK6M_51-dmyS-7KQ&s",
-    alt: "Android",
-    title: "androids", // Added title for navigation
-    buttonText: "View More Androids",
-  },
-  {
-    id: 3,
-    src: "https://5.imimg.com/data5/ANDROID/Default/2024/2/382543291/ZP/SY/HG/84554969/product-jpeg-500x500.jpg",
-    alt: "Accessories",
-    title: "accessories", // Added title for navigation
-    buttonText: "View More Accessories",
-  },
-];
 
 export default function Categories() {
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const categoryData = useSelector(selectcategoryData);
+  const categoryError = useSelector(selectcategoryError);
+  const categoryLoading = useSelector(selectcategoryLoading);
 
-  const handleClick = (title) => {
+  useEffect(() => {
+    dispatch(fetchcategoryData());
+  }, [dispatch]);
+
+  const handleClick = (name) => {
     // Navigate to the specific category page
-    navigate(`/categories/${title}`);
+    navigate(`/categories/${name}`);
   };
+
+  if (categoryLoading) {
+    return <Loader />;
+  }
+
+  if (categoryError) {
+    return <Error502 />;
+  }
+
+  if (categoryLoading && categoryData.length === 0) {
+    return <NoData />;
+  }
 
   return (
     <Box mt={16} p={8} mb={3}>
@@ -80,20 +87,20 @@ export default function Categories() {
         spacing={6}
         p={2}
       >
-        {images.map((image) => (
+        {categoryData.map((category) => (
           <Box
-            key={image.id}
+            key={category._id}
             position="relative"
             overflow="hidden"
             cursor="pointer"
-            onClick={() => handleClick(image.title)} // Update click handler
+            onClick={() => handleClick(category.name)}
             borderRadius="md"
             _hover={{ borderRadius: "15px" }}
             role="group"
           >
             <Image
-              src={image.src}
-              alt={image.alt}
+              src={category.categoryImage || Dummy}
+              alt={category.name}
               boxSize="100%"
               objectFit="cover"
             />
@@ -116,7 +123,8 @@ export default function Categories() {
                 _hover={{ bg: "gray.800" }}
                 rightIcon={<IoArrowForward />}
               >
-                {image.buttonText}
+                View More {category.name}{" "}
+                {/* Button text based on category title */}
               </Button>
             </Box>
           </Box>

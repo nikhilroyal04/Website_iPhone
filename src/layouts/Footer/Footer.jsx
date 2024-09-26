@@ -65,8 +65,8 @@ const Footer = () => {
             Collection
           </Text>
           <Text>iPhones</Text>
+          <Text>Android</Text>
           <Text>Accessories</Text>
-          <Text>Covers</Text>
         </VStack>
 
         {/* Connect with us */}
