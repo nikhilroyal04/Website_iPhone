@@ -14,6 +14,12 @@ import {
   Divider,
   Flex,
   HStack,
+  RangeSlider,
+  RangeSliderTrack,
+  RangeSliderFilledTrack,
+  RangeSliderThumb,
+  Stack,
+  Checkbox,
 } from "@chakra-ui/react";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -23,6 +29,7 @@ import {
   fetchAccessoryData,
   selectTotalPages,
 } from "../../../app/Slices/accessorySlice";
+import { selectSortOption, setSortOption } from "../../../app/Slices/sortSlice";
 import NoData from "../../NotFound/NoData";
 import Error502 from "../../NotFound/Error502";
 import Loader from "../../NotFound/Loader";
@@ -36,7 +43,12 @@ export default function Product() {
   const accessoryError = useSelector(selectAccessoryError);
   const accessoryLoading = useSelector(selectAccessoryLoading);
   const totalPages = useSelector(selectTotalPages);
+  const sortOption = useSelector(selectSortOption);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [priceRange, setPriceRange] = useState([10, 500000]);
+  const [typeOptions, setTypeOptions] = useState([]);
+  const [ageOptions, setAgeOptions] = useState([]);
 
   useEffect(() => {
     dispatch(fetchAccessoryData());
@@ -50,13 +62,12 @@ export default function Product() {
     return <Error502 />;
   }
 
-  if (accessoryLoading || accessoryData.length === 0) {
+  if (accessoryData.length === 0) {
     return <NoData />;
   }
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
-
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -69,9 +80,35 @@ export default function Product() {
     if (currentPage > 1) handlePageChange(currentPage - 1);
   };
 
+  const handleSortChange = (e) => {
+    dispatch(setSortOption(e.target.value));
+    setCurrentPage(1);
+  };
+
+  // Function to sort the accessory data
+  const sortedData = () => {
+    const dataCopy = [...accessoryData];
+
+    switch (sortOption) {
+      case "price-asc":
+        return dataCopy.sort(
+          (a, b) => a.variants[0].price - b.variants[0].price
+        );
+      case "price-desc":
+        return dataCopy.sort(
+          (a, b) => b.variants[0].price - a.variants[0].price
+        );
+      case "newest":
+        return dataCopy.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+      default:
+        return dataCopy;
+    }
+  };
+
   const renderPaginationButtons = () => {
     const pages = [];
-
     if (currentPage > 2) {
       pages.push(
         <Button key="first" onClick={handleFirstPage}>
@@ -146,6 +183,32 @@ export default function Product() {
     return pages;
   };
 
+  const handleClear = () => {
+    setPriceRange([10, 500000]);
+    setTypeOptions([]);
+    setAgeOptions([]);
+  };
+
+  const handleTypeChange = (value) => {
+    setTypeOptions((prev) => {
+      if (prev.includes(value)) {
+        return prev.filter((item) => item !== value);
+      } else {
+        return [...prev, value];
+      }
+    });
+  };
+
+  const handleAgeChange = (value) => {
+    setAgeOptions((prev) => {
+      if (prev.includes(value)) {
+        return prev.filter((item) => item !== value);
+      } else {
+        return [...prev, value];
+      }
+    });
+  };
+
   return (
     <Box p={8} mt={16}>
       {/* Breadcrumb Navigation */}
@@ -179,7 +242,13 @@ export default function Product() {
           <Text fontSize="15px" fontWeight="800" mr={5} my="auto">
             Sort by:
           </Text>
-          <Select placeholder="Sort by" width="200px" borderRadius="10px">
+          <Select
+            placeholder="Sort by"
+            width="200px"
+            borderRadius="10px"
+            value={sortOption}
+            onChange={handleSortChange}
+          >
             <option value="featured">Featured</option>
             <option value="price-asc">Price: Low to High</option>
             <option value="price-desc">Price: High to Low</option>
@@ -195,16 +264,79 @@ export default function Product() {
           pr={4}
           display={{ base: "none", lg: "block" }}
         >
-          <Text fontWeight="bold" mb={2}>
-            Filters
-          </Text>
+          {/* Filters Heading with Clear Button */}
+          <HStack justifyContent="space-between" mb={2}>
+            <Text fontWeight="bold">Filters</Text>
+            <Button size="sm" variant="outline" onClick={handleClear}>
+              Clear All
+            </Button>
+          </HStack>
           <Divider border="1px" mb={3} />
-          <Text mb={1}>Price</Text>
-          {/* Add range slider or price inputs */}
-          <Text mb={1}>Color</Text>
-          {/* Add color options */}
-          <Text mb={1}>Warranty</Text>
-          {/* Add warranty options */}
+
+          {/* Price Range Filter */}
+          <Box width="100%">
+            <Text fontSize="20px" fontWeight="600" my={2}>
+              Price Range: ₹{priceRange[0]} - ₹{priceRange[1]}
+            </Text>
+            <RangeSlider
+              aria-label={["min", "max"]}
+              defaultValue={priceRange}
+              min={10}
+              max={500000}
+              step={100}
+              onChange={(val) => setPriceRange(val)}
+            >
+              <RangeSliderTrack bg="gray.200">
+                <RangeSliderFilledTrack bg="blue.500" />
+              </RangeSliderTrack>
+              <RangeSliderThumb boxSize={6} index={0} />
+              <RangeSliderThumb boxSize={6} index={1} />
+            </RangeSlider>
+          </Box>
+
+          {/* Type Options Filter */}
+          <Box width="100%">
+            <Text fontSize="20px" fontWeight="600" my={2}>
+              Type
+            </Text>
+            <Stack direction="column" spacing={3}>
+              {["charger", "case", "earbuds", "screen protector", "other"].map(
+                (size) => (
+                  <Checkbox
+                    key={size}
+                    isChecked={typeOptions.includes(size)}
+                    onChange={() => handleTypeChange(size)}
+                  >
+                    {size}
+                  </Checkbox>
+                )
+              )}
+            </Stack>
+          </Box>
+
+          {/* Age Filter */}
+          <Box width="100%">
+            <Text fontSize="20px" fontWeight="600" my={2}>
+              Age
+            </Text>
+            <Stack direction="column" spacing={3}>
+              {[
+                "1-3 months",
+                "3-6 months",
+                "6-9 months",
+                "9 months - 1 year",
+                "1 year above",
+              ].map((age) => (
+                <Checkbox
+                  key={age}
+                  isChecked={ageOptions.includes(age)}
+                  onChange={() => handleAgeChange(age)}
+                >
+                  {age}
+                </Checkbox>
+              ))}
+            </Stack>
+          </Box>
         </Box>
         <Box width={{ base: "100%", lg: "70%" }}>
           <Grid
@@ -216,7 +348,7 @@ export default function Product() {
             }}
             gap={6}
           >
-            {accessoryData.map((accessory) => (
+            {sortedData().map((accessory) => (
               <VStack
                 key={accessory._id}
                 spacing={3}

@@ -35,10 +35,6 @@ export default function Categories() {
     dispatch(fetchcategoryData());
   }, [dispatch]);
 
-  const handleClick = (name) => {
-    // Navigate to the specific category page
-    navigate(`/categories/${name}`);
-  };
 
   if (categoryLoading) {
     return <Loader />;
@@ -48,10 +44,15 @@ export default function Categories() {
     return <Error502 />;
   }
 
-  if (categoryLoading && categoryData.length === 0) {
+  if (categoryData.length === 0) {
     return <NoData />;
   }
 
+  const handleClick = (name) => {
+    // Navigate to the specific category page
+    navigate(`/categories/${name}`);
+  };
+  
   return (
     <Box mt={16} p={8} mb={3}>
       {/* Breadcrumb Navigation */}

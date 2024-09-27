@@ -29,6 +29,7 @@ export const { setcategoryData, setcategoryLoading, setcategoryError } =
   categorySlice.actions;
 
 export const fetchcategoryData = () => async (dispatch) => {
+  dispatch(setcategoryLoading());
   try {
     const response = await axios.get(
       import.meta.env.VITE_BASE_URL + "category/user/getAllCategories"

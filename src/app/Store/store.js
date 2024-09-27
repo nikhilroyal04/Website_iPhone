@@ -5,6 +5,7 @@ import couponReducer from "../Slices/couponSlice";
 import iPhoneReducer from "../Slices/iPhoneSlice";
 import androidReducer from "../Slices/androidSlice";
 import accessoryReducer from "../Slices/accessorySlice";
+import sortReducer from "../Slices/sortSlice";
 
 const Store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ const Store = configureStore({
     iPhone: iPhoneReducer,
     android: androidReducer,
     accessory: accessoryReducer,
+    sort: sortReducer,
   },
 });
 

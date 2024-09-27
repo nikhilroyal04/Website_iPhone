@@ -26,7 +26,7 @@ const Category = () => {
   }, [dispatch]);
 
   const handleClick = (category) => {
-    navigate(`/${category}`);
+    navigate(`/categories/${category}`);
   };
 
   if (categoryLoading) {

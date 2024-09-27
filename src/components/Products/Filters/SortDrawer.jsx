@@ -1,4 +1,6 @@
 import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setSortOption, selectSortOption } from "../../../app/Slices/sortSlice";
 import {
   Drawer,
   DrawerBody,
@@ -16,10 +18,11 @@ import {
 } from "@chakra-ui/react";
 
 const SortDrawer = ({ isOpen, onClose }) => {
-  const [sortValue, setSortValue] = React.useState("featured");
+  const dispatch = useDispatch();
+  const sortOption = useSelector(selectSortOption);
 
   const handleSortChange = (value) => {
-    setSortValue(value);
+    dispatch(setSortOption(value));
   };
 
   const handleApply = () => {
@@ -27,7 +30,7 @@ const SortDrawer = ({ isOpen, onClose }) => {
   };
 
   const handleClear = () => {
-    setSortValue("featured");
+    dispatch(setSortOption("featured")); // reset to default
     onClose();
   };
 
@@ -44,7 +47,7 @@ const SortDrawer = ({ isOpen, onClose }) => {
           </DrawerHeader>
           <DrawerBody>
             <VStack spacing={4} align="start">
-              <RadioGroup onChange={handleSortChange} value={sortValue}>
+              <RadioGroup onChange={handleSortChange} value={sortOption}>
                 <VStack spacing={2} align="start">
                   <Radio value="featured">Featured</Radio>
                   <Radio value="price-asc">Price: Low to High</Radio>

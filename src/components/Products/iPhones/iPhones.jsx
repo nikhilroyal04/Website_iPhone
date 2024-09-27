@@ -14,6 +14,12 @@ import {
   Divider,
   Flex,
   HStack,
+  RangeSlider,
+  RangeSliderTrack,
+  RangeSliderFilledTrack,
+  RangeSliderThumb,
+  Stack,
+  Checkbox,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
@@ -24,12 +30,13 @@ import {
   fetchiPhoneData,
   selectTotalPages,
 } from "../../../app/Slices/iPhoneSlice";
+import { selectSortOption, setSortOption } from "../../../app/Slices/sortSlice";
 import NoData from "../../NotFound/NoData";
 import Error502 from "../../NotFound/Error502";
 import Loader from "../../NotFound/Loader";
 import Dummy from "../../../assets/images/Dummy.jpg";
 
-export default function Product() {
+export default function iPhones() {
   const { name } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -37,7 +44,13 @@ export default function Product() {
   const iPhoneError = useSelector(selectiPhoneError);
   const iPhoneLoading = useSelector(selectiPhoneLoading);
   const totalPages = useSelector(selectTotalPages);
+  const sortOption = useSelector(selectSortOption);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [priceRange, setPriceRange] = useState([10, 500000]);
+  const [batteryHealthOptions, setBatteryHealthOptions] = useState([]);
+  const [storageOptions, setStorageOptions] = useState([]);
+  const [ageOptions, setAgeOptions] = useState([]);
 
   useEffect(() => {
     dispatch(fetchiPhoneData());
@@ -51,13 +64,48 @@ export default function Product() {
     return <Error502 />;
   }
 
-  if (iPhoneLoading || iPhoneData.length === 0) {
+  if (iPhoneData.length === 0) {
     return <NoData />;
   }
 
+  const handleSortChange = (event) => {
+    dispatch(setSortOption(event.target.value));
+    setCurrentPage(1);
+  };
+
+  // Function to flatten and sort the variants
+  const sortedData = () => {
+    // Flattening all variants into a single array
+    const allVariants = iPhoneData.flatMap((product) =>
+      product.variants.map((variant) => ({
+        ...variant,
+        model: product.model,
+        media: product.media[0],
+      }))
+    );
+
+    // Sort data based on the selected sort option
+    let sortedVariants = [...allVariants];
+    if (sortOption === "price-asc") {
+      sortedVariants.sort((a, b) => a.price - b.price);
+    } else if (sortOption === "price-desc") {
+      sortedVariants.sort((a, b) => b.price - a.price);
+    } else if (sortOption === "newest") {
+      sortedVariants.sort(
+        (a, b) => new Date(b.createdOn) - new Date(a.createdOn)
+      );
+    }
+
+    return sortedVariants;
+  };
+
+  const totalVariantsCount = iPhoneData.reduce(
+    (acc, product) => acc + product.variants.length,
+    0
+  );
+
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
-
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -147,6 +195,43 @@ export default function Product() {
     return pages;
   };
 
+  const handleClear = () => {
+    setPriceRange([10, 500000]);
+    setBatteryHealthOptions([]);
+    setStorageOptions([]);
+    setAgeOptions([]);
+  };
+
+  const handleBatteryHealthChange = (value) => {
+    setBatteryHealthOptions((prev) => {
+      if (prev.includes(value)) {
+        return prev.filter((item) => item !== value);
+      } else {
+        return [...prev, value];
+      }
+    });
+  };
+
+  const handleStorageChange = (value) => {
+    setStorageOptions((prev) => {
+      if (prev.includes(value)) {
+        return prev.filter((item) => item !== value);
+      } else {
+        return [...prev, value];
+      }
+    });
+  };
+
+  const handleAgeChange = (value) => {
+    setAgeOptions((prev) => {
+      if (prev.includes(value)) {
+        return prev.filter((item) => item !== value);
+      } else {
+        return [...prev, value];
+      }
+    });
+  };
+
   return (
     <Box p={8} mt={16}>
       {/* Breadcrumb Navigation */}
@@ -174,13 +259,19 @@ export default function Product() {
       >
         <Text fontSize="4xl" fontWeight="800">
           {name.charAt(0).toUpperCase() + name.slice(1)} Products (
-          {iPhoneData.length})
+          {totalVariantsCount})
         </Text>
         <Flex display={{ base: "none", lg: "flex" }} alignItems="center">
           <Text fontSize="15px" fontWeight="800" mr={5} my="auto">
             Sort by:
           </Text>
-          <Select placeholder="Sort by" width="200px" borderRadius="10px">
+          <Select
+            placeholder="Sort by"
+            width="200px"
+            borderRadius="10px"
+            value={sortOption}
+            onChange={handleSortChange}
+          >
             <option value="featured">Featured</option>
             <option value="price-asc">Price: Low to High</option>
             <option value="price-desc">Price: High to Low</option>
@@ -196,16 +287,103 @@ export default function Product() {
           pr={4}
           display={{ base: "none", lg: "block" }}
         >
-          <Text fontWeight="bold" mb={2}>
-            Filters
-          </Text>
+          {/* Filters Heading with Clear Button */}
+          <HStack justifyContent="space-between" mb={2}>
+            <Text fontWeight="bold">Filters</Text>
+            <Button size="sm" variant="outline" onClick={handleClear}>
+              Clear All
+            </Button>
+          </HStack>
           <Divider border="1px" mb={3} />
-          <Text mb={1}>Price</Text>
-          {/* Add range slider or price inputs */}
-          <Text mb={1}>Color</Text>
-          {/* Add color options */}
-          <Text mb={1}>Warranty</Text>
-          {/* Add warranty options */}
+
+          {/* Price Range Filter */}
+          <Box width="100%">
+            <Text fontSize="20px" fontWeight="600" my={2}>
+              Price Range: ₹{priceRange[0]} - ₹{priceRange[1]}
+            </Text>
+            <RangeSlider
+              aria-label={["min", "max"]}
+              defaultValue={priceRange}
+              min={10}
+              max={500000}
+              step={100}
+              onChange={(val) => setPriceRange(val)}
+            >
+              <RangeSliderTrack bg="gray.200">
+                <RangeSliderFilledTrack bg="blue.500" />
+              </RangeSliderTrack>
+              <RangeSliderThumb boxSize={6} index={0} />
+              <RangeSliderThumb boxSize={6} index={1} />
+            </RangeSlider>
+          </Box>
+
+          {/* Battery Health Filter (Only for iPhone category) */}
+          {location.pathname === "/categories/iPhone" && (
+            <Box width="100%">
+              <Text fontSize="20px" fontWeight="600" my={2}>
+                Battery Health
+              </Text>
+              <Stack direction="column" spacing={3}>
+                {["80-below", "81-90", "90-95", "95-100"].map((health) => (
+                  <Checkbox
+                    key={health}
+                    isChecked={batteryHealthOptions.includes(health)}
+                    onChange={() => handleBatteryHealthChange(health)}
+                  >
+                    {health === "80-below"
+                      ? "80% and below"
+                      : health === "81-90"
+                      ? "81% to 90%"
+                      : health === "90-95"
+                      ? "90% to 95%"
+                      : "95% to 100%"}
+                  </Checkbox>
+                ))}
+              </Stack>
+            </Box>
+          )}
+
+          {/* Storage Options Filter */}
+          <Box width="100%">
+            <Text fontSize="20px" fontWeight="600" my={2}>
+              Storage Options
+            </Text>
+            <Stack direction="column" spacing={3}>
+              {["64GB", "128GB", "256GB", "512GB", "1TB"].map((size) => (
+                <Checkbox
+                  key={size}
+                  isChecked={storageOptions.includes(size)}
+                  onChange={() => handleStorageChange(size)}
+                >
+                  {size}
+                </Checkbox>
+              ))}
+            </Stack>
+          </Box>
+
+          {/* Age Filter */}
+          <Box width="100%">
+            <Text fontSize="20px" fontWeight="600" my={2}>
+              Age
+            </Text>
+            <Stack direction="column" spacing={3}>
+              {[
+                "1-3 months",
+                "3-6 months",
+                "6-9 months",
+                "9 months - 1 year",
+                "1 year above",
+              ].map((age) => (
+                <Checkbox
+                  key={age}
+                  isChecked={ageOptions.includes(age)}
+                  onChange={() => handleAgeChange(age)}
+                >
+                  {age}
+                </Checkbox>
+              ))}
+            </Stack>
+          </Box>
         </Box>
         <Box width={{ base: "100%", lg: "70%" }}>
           <Grid
@@ -217,9 +395,9 @@ export default function Product() {
             }}
             gap={6}
           >
-            {iPhoneData.map((product) => (
+            {sortedData().map((variant, index) => (
               <VStack
-                key={product._id} // Use the unique id from iPhoneData
+                key={`${variant.model}-${variant.storage}-${index}`}
                 spacing={3}
                 align="start"
                 p={4}
@@ -230,10 +408,9 @@ export default function Product() {
               >
                 {/* Wrapper for image and hover button */}
                 <Box position="relative" w="full">
-                  {/* Render the first variant's image or a placeholder if not found */}
                   <Image
-                    src={product.media.length > 0 ? product.media[0] : Dummy}
-                    alt={product.model}
+                    src={variant.media || Dummy}
+                    alt={variant.model}
                     boxSize="full"
                     objectFit="cover"
                     transition="all 0.3s ease"
@@ -257,30 +434,28 @@ export default function Product() {
                     Add to Cart
                   </Button>
                 </Box>
-                <Text fontWeight="semibold">{`${product.model} - ${product.variants[0].storage}, ${product.variants[0].color}`}</Text>
-                {/* Display the first available variant's price and details */}
-                {product.variants.length > 0 && (
-                  <Text fontSize="lg" color="blue.600">
-                    ₹{product.variants[0].price}
-                    <Text
-                      as="span"
-                      textDecoration="line-through"
-                      ml={2}
-                      color="gray"
-                    >
-                      ₹{product.variants[0].originalPrice || "N/A"}
-                    </Text>
-                    <Text as="span" color="red.500" ml={2}>
-                      ({product.variants[0].priceOff || "0%"} off)
-                    </Text>
+                <Text fontWeight="semibold">{`${variant.model} - ${variant.storage}, ${variant.color}`}</Text>
+                {/* Display price and details */}
+                <Text fontSize="lg" color="blue.600">
+                  ₹{variant.price}
+                  <Text
+                    as="span"
+                    textDecoration="line-through"
+                    ml={2}
+                    color="gray"
+                  >
+                    ₹{variant.originalPrice || "N/A"}
                   </Text>
-                )}
+                  <Text as="span" color="red.500" ml={2}>
+                    ({variant.priceOff || "0%"} off)
+                  </Text>
+                </Text>
               </VStack>
             ))}
           </Grid>
         </Box>
       </Box>
-      {iPhoneData.length >= 20 && (
+      {totalVariantsCount >= 20 && (
         <HStack spacing={4} justifyContent="center" mt={6}>
           {renderPaginationButtons()}
         </HStack>
