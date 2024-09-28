@@ -4,6 +4,7 @@ import Category from "./Category/Category";
 import Coupon from "./Coupon/Coupon";
 import Pro1 from "./Pro1/Pro1";
 import Pro2 from "./Pro2/Pro2";
+import Pro3 from "./Pro3/Pro3";
 import { CloseIcon } from "@chakra-ui/icons";
 import {
   Box,
@@ -81,6 +82,7 @@ export default function Dashboard() {
       </Drawer>
       <Pro1/>
       <Pro2/>
+      <Pro3/>
     </>
   );
 }

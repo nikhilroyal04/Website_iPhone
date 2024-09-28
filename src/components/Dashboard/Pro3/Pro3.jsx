@@ -3,41 +3,41 @@ import { Box, Text, Grid, Image, VStack, Button, Flex } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import {
-  selectiPhoneData,
-  selectiPhoneError,
-  selectiPhoneLoading,
-  fetchiPhoneData,
-} from "../../../app/Slices/iPhoneSlice";
+  selectAccessoryData,
+  selectAccessoryError,
+  selectAccessoryLoading,
+  fetchAccessoryData,
+} from "../../../app/Slices/accessorySlice";
 import NoData from "../../NotFound/NoData";
 import Error502 from "../../NotFound/Error502";
 import Loader from "../../NotFound/Loader";
 import Dummy from "../../../assets/images/Dummy.jpg";
 
-const Pro1 = () => {
+const Pro2 = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const iPhoneData = useSelector(selectiPhoneData);
-  const iPhoneError = useSelector(selectiPhoneError);
-  const iPhoneLoading = useSelector(selectiPhoneLoading);
+  const AccessoryData = useSelector(selectAccessoryData);
+  const AccessoryError = useSelector(selectAccessoryError);
+  const AccessoryLoading = useSelector(selectAccessoryLoading);
 
   useEffect(() => {
-    dispatch(fetchiPhoneData());
+    dispatch(fetchAccessoryData());
   }, [dispatch]);
 
-  if (iPhoneLoading) {
+  if (AccessoryLoading) {
     return <Loader />;
   }
 
-  if (iPhoneError) {
+  if (AccessoryError) {
     return <Error502 />;
   }
 
-  if (iPhoneLoading && iPhoneData.length === 0) {
+  if (AccessoryLoading && AccessoryData.length === 0) {
     return <NoData />;
   }
 
   const handleItemClick = (id) => {
-    navigate(`/categories/iPhone/${id}`);
+    navigate(`/categories/Accessories/${id}`);
   };
 
   const handleAddToCartClick = () => {
@@ -45,9 +45,9 @@ const Pro1 = () => {
   };
 
   return (
-    <Box bg="gray.50" p={4}>
+    <Box p={4} bg="gray.50">
       <Text fontSize="4xl" fontWeight="bold" mb={6} textAlign="center">
-        Find your iPhone
+        Looking for accessories
       </Text>
       <Grid
         templateColumns={{
@@ -58,19 +58,17 @@ const Pro1 = () => {
         }}
         gap={6}
       >
-        {iPhoneData.map((iPhone) => {
-          // Render the first variant of each iPhone
-          const variant = iPhone.variants[0];
+        {AccessoryData.map((Accessory) => {
+          // Extract the first variant to render its details
+          const variant = Accessory.variants[0];
 
-          // Use the first image from media[] if available, otherwise use placeholder
+          // Use the first image from media[] if available, otherwise use a placeholder image
           const imageUrl =
-            iPhone.media.length > 0
-              ? iPhone.media[0]
-              : Dummy;
+            Accessory.media.length > 0 ? Accessory.media[0] : Dummy;
 
           return (
             <VStack
-              key={iPhone._id}
+              key={Accessory._id}
               spacing={3}
               align="start"
               p={4}
@@ -79,13 +77,13 @@ const Pro1 = () => {
               className="card"
               cursor="pointer"
               role="group"
-              onClick={() => handleItemClick(iPhone._id)} 
+              onClick={() => handleItemClick(Accessory._id)}
             >
               {/* Wrapper for image and hover button */}
               <Box position="relative" w="full">
                 <Image
                   src={imageUrl || Dummy}
-                  alt={`Product ${iPhone.model}`}
+                  alt={`Product ${Accessory.name}`}
                   boxSize="full"
                   objectFit="cover"
                   transition="all 0.3s ease"
@@ -108,14 +106,16 @@ const Pro1 = () => {
                   transition="opacity 0.3s ease"
                   _groupHover={{ opacity: 1 }}
                   onClick={(e) => {
-                    e.stopPropagation(); 
-                    handleAddToCartClick(); 
+                    e.stopPropagation();
+                    handleAddToCartClick();
                   }}
                 >
                   Add to Cart
                 </Button>
               </Box>
-              <Text fontWeight="semibold">{`${iPhone.model} - ${variant.storage}, ${variant.color}`}</Text>
+              <Text fontWeight="semibold">
+                {`${Accessory.name} - ${variant.color}`}
+              </Text>
               <Text fontSize="lg" color="blue.600">
                 ₹{variant.price}
                 {variant.originalPrice && (
@@ -153,4 +153,4 @@ const Pro1 = () => {
   );
 };
 
-export default Pro1;
+export default Pro2;

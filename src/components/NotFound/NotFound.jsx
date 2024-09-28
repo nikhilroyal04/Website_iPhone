@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Button, VStack } from "@chakra-ui/react";
+import { Box, Button, VStack, Text } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import Lottie from "react-lottie-player";
 import animationData from "../../assets/animations/NotFound.json";
@@ -25,10 +25,11 @@ const NotFound = () => {
         loop
         animationData={animationData}
         play
-        style={{ width: "60%", maxWidth: "600px", height: "auto" }}
+        style={{ width: "60%", maxWidth: "300px", height: "auto" }}
       />
 
       <VStack mt={2}>
+        <Text color="red" fontSize="xl">Page not found</Text>
         <Button
           size="lg"
           onClick={handleGoHome}

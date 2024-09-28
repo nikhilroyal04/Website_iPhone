@@ -209,6 +209,14 @@ export default function Product() {
     });
   };
 
+  const handleItemClick = (id) => {
+    navigate(`/categories/Accessories/${id}`);
+  };
+
+  const handleAddToCartClick = () => {
+    navigate("#");
+  };
+
   return (
     <Box p={8} mt={16}>
       {/* Breadcrumb Navigation */}
@@ -358,6 +366,7 @@ export default function Product() {
                 position="relative"
                 cursor="pointer"
                 role="group"
+                onClick={() => handleItemClick(accessory._id)}
               >
                 {/* Wrapper for image and hover button */}
                 <Box position="relative" w="full">
@@ -383,6 +392,10 @@ export default function Product() {
                     opacity={0}
                     transition="opacity 0.3s ease"
                     _groupHover={{ opacity: 1 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddToCartClick();
+                    }}
                   >
                     Add to Cart
                   </Button>

@@ -78,7 +78,7 @@ export const fetchAccessoryById = (id) => async (dispatch) => {
   dispatch(setAccessoryLoading());
   try {
     const response = await axios.get(
-      import.meta.env.VITE_BASE_URL + `product/accessory/getAccessory${id}`
+      import.meta.env.VITE_BASE_URL + `product/accessory/getAccessory/${id}`
     );
     dispatch(setAccessoryById(response.data.data));
   } catch (error) {
@@ -88,6 +88,7 @@ export const fetchAccessoryById = (id) => async (dispatch) => {
 
 // Selectors to access the accessory state
 export const selectAccessoryData = (state) => state.accessory.data;
+export const selectAccessoryById = (state) => state.accessory.AccessoryById;
 export const selectAccessoryLoading = (state) => state.accessory.isLoading;
 export const selectAccessoryError = (state) => state.accessory.error;
 export const selectTotalPages = (state) => state.accessory.totalPages;

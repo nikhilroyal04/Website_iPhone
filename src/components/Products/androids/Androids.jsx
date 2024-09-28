@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Text,
@@ -37,6 +37,7 @@ import { selectSortOption, setSortOption } from "../../../app/Slices/sortSlice";
 export default function Androids() {
   const { name } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const androidData = useSelector(selectAndroidData);
   const androidError = useSelector(selectAndroidError);
   const androidLoading = useSelector(selectAndroidLoading);
@@ -70,6 +71,7 @@ export default function Androids() {
         ...variant,
         model: product.model,
         media: product.media[0],
+        modelId: product._id,
       }))
     );
 
@@ -214,6 +216,14 @@ export default function Androids() {
         return [...prev, value];
       }
     });
+  };
+
+  const handleItemClick = (id) => {
+    navigate(`/categories/Android/${id}`);
+  };
+
+  const handleAddToCartClick = () => {
+    navigate("#");
   };
 
   return (
@@ -363,6 +373,7 @@ export default function Androids() {
                 position="relative"
                 cursor="pointer"
                 role="group"
+                onClick={() => handleItemClick(variant.modelId)} 
               >
                 {/* Wrapper for image and hover button */}
                 <Box position="relative" w="full">
@@ -388,6 +399,10 @@ export default function Androids() {
                     opacity={0}
                     transition="opacity 0.3s ease"
                     _groupHover={{ opacity: 1 }}
+                    onClick={(e) => {
+                      e.stopPropagation(); 
+                      handleAddToCartClick(); 
+                    }}
                   >
                     Add to Cart
                   </Button>

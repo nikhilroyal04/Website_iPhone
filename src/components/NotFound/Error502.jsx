@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Button, VStack } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import Lottie from "react-lottie-player";
-import animationData from "../../assets/animations/Error502.json"; 
+import animationData from "../../assets/animations/Error502.json";
 
 const Error502 = () => {
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ const Error502 = () => {
       justifyContent="center"
       alignItems="center"
       flexDirection="column"
-      height="auto"
+      height="85vh"
       mb={10}
     >
       {/* Lottie Animation */}
@@ -25,15 +25,13 @@ const Error502 = () => {
         loop
         animationData={animationData}
         play
-        style={{ width: "60%", maxWidth: "650px", height: "auto" }}
+        style={{ width: "60%", maxWidth: "350px", height: "auto" }}
       />
 
       <VStack mt={4}>
         <Button
-          size="lg"
+          size="md"
           onClick={handleGoHome}
-          px={10}
-          py={6}
           fontSize="lg"
           borderRadius="lg"
           bg="teal.400"

@@ -77,7 +77,7 @@ export const fetchiPhoneById = (id) => async (dispatch) => {
   dispatch(setiPhoneLoading());
   try {
     const response = await axios.get(
-      import.meta.env.VITE_BASE_URL + `product/iPhone/getiPhone${id}`
+      import.meta.env.VITE_BASE_URL + `product/iPhone/getiPhone/${id}`
     );
     dispatch(setiPhoneById(response.data.data));
   } catch (error) {
@@ -87,6 +87,7 @@ export const fetchiPhoneById = (id) => async (dispatch) => {
 
 // Selectors to access the iPhone state
 export const selectiPhoneData = (state) => state.iPhone.data;
+export const selectiPhoneById = (state) => state.iPhone.iPhoneById;
 export const selectiPhoneLoading = (state) => state.iPhone.isLoading;
 export const selectiPhoneError = (state) => state.iPhone.error;
 export const selectTotalPages = (state) => state.iPhone.totalPages;

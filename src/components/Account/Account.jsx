@@ -22,6 +22,9 @@ import { AiOutlinePlus } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
 import Filter from "./Filter"; // Import the Filter component
 import Address from "./Address";
+import Login from "../Auth/Login"; // Import the Login component
+import { useDispatch, useSelector } from "react-redux";
+import { selectUser, logout } from "../../app/Slices/authSlice";
 
 export default function Account() {
   const [selectedTab, setSelectedTab] = useState("orders");
@@ -29,23 +32,37 @@ export default function Account() {
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [isLargeScreen, setIsLargeScreen] = useState(false);
   const [isLargerThanLg] = useMediaQuery("(min-width: 62em)");
-
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const { isOpen, onOpen, onClose } = useDisclosure(); // Chakra UI's modal control
+  const {
+    isOpen: isFilterOpen,
+    onOpen: onFilterOpen,
+    onClose: onFilterClose,
+  } = useDisclosure(); // Chakra UI's modal control
   const {
     isOpen: isAddressOpen,
     onOpen: onAddressOpen,
     onClose: onAddressClose,
   } = useDisclosure();
+  const {
+    isOpen: isLoginOpen,
+    onOpen: onLoginOpen,
+    onClose: onLoginClose,
+  } = useDisclosure();
+
+  const user = useSelector(selectUser);
+
+  // Trigger login modal on /account route if not logged in
+  useEffect(() => {
+    if (!user && window.location.pathname === "/account") {
+      onLoginOpen(); // Auto-open the modal when navigating to /account if not logged in
+    }
+  }, [user, onLoginOpen]);
 
   useEffect(() => {
     setIsLargeScreen(isLargerThanLg);
-    if (isLargerThanLg) {
-      setShowSidebar(true);
-    } else {
-      setShowSidebar(false);
-    }
+    setShowSidebar(isLargerThanLg); // Automatically show sidebar on large screens
   }, [isLargerThanLg]);
 
   const handleTabClick = (tab) => {
@@ -61,7 +78,12 @@ export default function Account() {
 
   const handleFilterChange = (value) => {
     setSelectedFilter(value);
-    handleFilterClose();
+    onFilterClose(); // Close filter modal after selection
+  };
+
+  const handleSignOut = () => {
+    dispatch(logout());
+    navigate("/"); // Redirect to home page after sign out
   };
 
   return (
@@ -75,9 +97,15 @@ export default function Account() {
         <Text fontSize="2xl" fontWeight="400">
           Account
         </Text>
-        <Text fontSize="2xl" fontWeight="400">
-          +91 9068552519
-        </Text>
+        {user ? (
+          <Text fontSize="xl" fontWeight="600" color="green">
+            Welcome, {user.name}
+          </Text>
+        ) : (
+          <Button onClick={onLoginOpen} colorScheme="blue">
+            Login
+          </Button>
+        )}
       </Flex>
 
       {!isLargeScreen && <Divider mt={2} />}
@@ -118,14 +146,18 @@ export default function Account() {
             </Box>
             <Box
               mb={3}
-              cursor="pointer"
+              cursor={user ? "pointer" : "not-allowed"} // Disable clicking if not logged in
               bg={selectedTab === "addresses" ? "blue.50" : "transparent"}
               p={2}
               borderRadius="md"
               borderBottom={
                 selectedTab === "addresses" ? "2px solid blue.600" : "none"
               }
-              onClick={() => handleTabClick("addresses")}
+              onClick={() => {
+                if (user) {
+                  handleTabClick("addresses");
+                }
+              }}
             >
               <Text fontSize="xl" display="flex" alignItems="center">
                 <Icon
@@ -141,7 +173,7 @@ export default function Account() {
               cursor="pointer"
               p={2}
               borderRadius="md"
-              onClick={() => navigate("/")}
+              onClick={handleSignOut} // Use the sign-out function
             >
               <Text fontSize="xl" display="flex" alignItems="center">
                 <Icon as={GoSignOut} mr={2} />
@@ -186,70 +218,100 @@ export default function Account() {
                     color="blue"
                     bg="white"
                     variant="outline"
-                    onClick={onOpen} // Open the filter modal on click
+                    onClick={onFilterOpen} // Open the filter modal on click
                   >
                     Filter
                   </Button>
                 </HStack>
-                {/* Example Orders List */}
+
+                {/* Render User Orders */}
                 <VStack spacing={4} align="start">
-                  {/* Placeholder for order items */}
-                  <Box
-                    p={4}
-                    shadow="md"
-                    borderWidth="1px"
-                    borderRadius="md"
-                    width="full"
-                  >
-                    <Heading as="h3" size="md" mb={2}>
-                      Order #12345
-                    </Heading>
-                    <Text mb={2}>Details about the order...</Text>
-                    <Button variant="link" color="blue.600">
-                      View Details
-                    </Button>
-                  </Box>
-                  <Box
-                    p={4}
-                    shadow="md"
-                    borderWidth="1px"
-                    borderRadius="md"
-                    width="full"
-                  >
-                    <Heading as="h3" size="md" mb={2}>
-                      Order #12346
-                    </Heading>
-                    <Text mb={2}>Details about the order...</Text>
-                    <Button variant="link" color="blue.600">
-                      View Details
-                    </Button>
-                  </Box>
+                  {user?.myOrders && user.myOrders.length > 0 ? (
+                    user.myOrders.map((order, index) => (
+                      <Box
+                        key={index}
+                        p={4}
+                        shadow="md"
+                        borderWidth="1px"
+                        borderRadius="md"
+                        width="full"
+                      >
+                        <Heading as="h3" size="md" mb={2}>
+                          Order #{order.id}
+                        </Heading>
+                        <Text mb={2}>{order.details}</Text>
+                        <Button variant="link" color="blue.600">
+                          View Details
+                        </Button>
+                      </Box>
+                    ))
+                  ) : (
+                    <Box
+                      width="full"
+                      display="flex"
+                      justifyContent="center"
+                      alignItems="center"
+                      height="60vh"
+                    >
+                      <Text textAlign="center" fontSize="xl">
+                        No orders found.
+                      </Text>
+                    </Box>
+                  )}
                 </VStack>
               </>
             )}
 
             {selectedTab === "addresses" && (
               <>
-                <SimpleGrid columns={[1, 2]} spacing={4}>
-                  {/* Other address cards */}
-                  <Box
-                    p={4}
-                    shadow="md"
-                    borderWidth="1px"
-                    borderRadius="md"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    borderStyle="dashed"
-                    onClick={onAddressOpen}
-                    cursor="pointer"
-                  >
-                    <Center>
-                      <Icon as={AiOutlinePlus} boxSize={8} color="blue.500" />
-                    </Center>
-                    <Text ml={4}>Add Address</Text>
-                  </Box>
-                </SimpleGrid>
+                <HStack spacing={4} mb={4} align="center">
+                  <Text fontSize="lg" flex="1">
+                    My Addresses
+                  </Text>
+                </HStack>
+
+                {/* Render User Addresses */}
+                <VStack spacing={4} align="start">
+                  {user?.myAddresses && user.myAddresses.length > 0 ? (
+                    user.myAddresses.map((address, index) => (
+                      <Box
+                        key={index}
+                        p={4}
+                        shadow="md"
+                        borderWidth="1px"
+                        borderRadius="md"
+                        width="full"
+                      >
+                        <Text>{address.details}</Text>
+                      </Box>
+                    ))
+                  ) : (
+                    <Text>No addresses found.</Text>
+                  )}
+
+                  {/* Add New Address Button */}
+                  <SimpleGrid columns={[1, 2]} spacing={4}>
+                    <Box
+                      p={4}
+                      shadow="md"
+                      borderWidth="1px"
+                      borderRadius="md"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      borderStyle="dashed"
+                      onClick={onAddressOpen}
+                      cursor="pointer"
+                    >
+                      <Center>
+                        <Icon as={AiOutlinePlus} boxSize={8} color="blue.600" />
+                        <Text ml={2} color="blue.600">
+                          Add New Address
+                        </Text>
+                      </Center>
+                    </Box>
+                  </SimpleGrid>
+                </VStack>
               </>
             )}
           </Box>
@@ -258,14 +320,17 @@ export default function Account() {
 
       {/* Filter Modal */}
       <Filter
-        isOpen={isOpen}
-        onClose={onClose}
+        isOpen={isFilterOpen}
+        onClose={onFilterClose}
         onFilterChange={handleFilterChange}
         selectedFilter={selectedFilter}
       />
 
       {/* Address Modal */}
       <Address isOpen={isAddressOpen} onClose={onAddressClose} />
+
+      {/* Login Modal */}
+      <Login isOpen={isLoginOpen} onClose={onLoginClose} onOpen={onLoginOpen} />
     </>
   );
 }

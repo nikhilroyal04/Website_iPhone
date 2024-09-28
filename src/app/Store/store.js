@@ -6,6 +6,7 @@ import iPhoneReducer from "../Slices/iPhoneSlice";
 import androidReducer from "../Slices/androidSlice";
 import accessoryReducer from "../Slices/accessorySlice";
 import sortReducer from "../Slices/sortSlice";
+import userReducer from "../Slices/userSlice";
 
 const Store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ const Store = configureStore({
     android: androidReducer,
     accessory: accessoryReducer,
     sort: sortReducer,
+    user: userReducer,
   },
 });
 

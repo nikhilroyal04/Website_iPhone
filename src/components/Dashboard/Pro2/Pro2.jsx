@@ -37,10 +37,18 @@ const Pro2 = () => {
     return <NoData />;
   }
 
+  const handleItemClick = (id) => {
+    navigate(`/categories/Android/${id}`);
+  };
+
+  const handleAddToCartClick = () => {
+    navigate("#");
+  };
+
   return (
     <Box p={4}>
       <Text fontSize="4xl" fontWeight="bold" mb={6} textAlign="center">
-        Show your device
+        Explore Androids
       </Text>
       <Grid
         templateColumns={{
@@ -72,6 +80,7 @@ const Pro2 = () => {
               className="card"
               cursor="pointer"
               role="group"
+              onClick={() => handleItemClick(android._id)} 
             >
               {/* Wrapper for image and hover button */}
               <Box position="relative" w="full">
@@ -99,6 +108,10 @@ const Pro2 = () => {
                   opacity={0}
                   transition="opacity 0.3s ease"
                   _groupHover={{ opacity: 1 }}
+                  onClick={(e) => {
+                    e.stopPropagation(); 
+                    handleAddToCartClick(); 
+                  }}
                 >
                   Add to Cart
                 </Button>
@@ -109,13 +122,13 @@ const Pro2 = () => {
               <Text fontSize="lg" color="blue.600">
                 ₹{variant.price}
                 {variant.originalPrice && (
-                  <Text as="span" textDecoration="line-through" ml={2}>
+                  <Text as="span" textDecoration="line-through" ml={2} color="gray">
                     ₹{variant.originalPrice}
                   </Text>
                 )}
                 {variant.priceOff && (
                   <Text as="span" color="red.500" ml={2}>
-                    {variant.priceOff}% off
+                    {variant.priceOff} off
                   </Text>
                 )}
               </Text>

@@ -78,7 +78,7 @@ export const fetchAndroidById = (id) => async (dispatch) => {
   dispatch(setAndroidLoading());
   try {
     const response = await axios.get(
-      import.meta.env.VITE_BASE_URL + `product/Android/getAndroid${id}`
+      import.meta.env.VITE_BASE_URL + `product/Android/getAndroid/${id}`
     );
     dispatch(setAndroidById(response.data.data));
   } catch (error) {
@@ -88,6 +88,7 @@ export const fetchAndroidById = (id) => async (dispatch) => {
 
 // Selectors to access the Android state
 export const selectAndroidData = (state) => state.android.data;
+export const selectAndroidById = (state) => state.android.AndroidById;
 export const selectAndroidLoading = (state) => state.android.isLoading;
 export const selectAndroidError = (state) => state.android.error;
 export const selectTotalPages = (state) => state.android.totalPages;

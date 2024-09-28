@@ -81,6 +81,7 @@ export default function iPhones() {
         ...variant,
         model: product.model,
         media: product.media[0],
+        modelId: product._id,
       }))
     );
 
@@ -230,6 +231,14 @@ export default function iPhones() {
         return [...prev, value];
       }
     });
+  };
+
+  const handleItemClick = (id) => {
+    navigate(`/categories/iPhone/${id}`);
+  };
+
+  const handleAddToCartClick = () => {
+    navigate("#");
   };
 
   return (
@@ -405,6 +414,7 @@ export default function iPhones() {
                 position="relative"
                 cursor="pointer"
                 role="group"
+                onClick={() => handleItemClick(variant.modelId)} 
               >
                 {/* Wrapper for image and hover button */}
                 <Box position="relative" w="full">
@@ -430,6 +440,10 @@ export default function iPhones() {
                     opacity={0}
                     transition="opacity 0.3s ease"
                     _groupHover={{ opacity: 1 }}
+                    onClick={(e) => {
+                      e.stopPropagation(); 
+                      handleAddToCartClick(); 
+                    }}
                   >
                     Add to Cart
                   </Button>
