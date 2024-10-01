@@ -10,10 +10,7 @@ import {
   Collapse,
   useToast,
 } from "@chakra-ui/react";
-import {
-  MdKeyboardArrowDown,
-  MdOutlineKeyboardArrowUp,
-} from "react-icons/md";
+import { MdKeyboardArrowDown, MdOutlineKeyboardArrowUp } from "react-icons/md";
 import { useSelector, useDispatch } from "react-redux";
 import {
   selectcouponData,
@@ -21,6 +18,8 @@ import {
   selectcouponLoading,
   fetchcouponData,
 } from "../../../app/Slices/couponSlice";
+import Loader from "../../NotFound/Loader";
+import Error502 from "../../NotFound/Error502";
 
 const Coupon = () => {
   const toast = useToast();
@@ -66,11 +65,11 @@ const Coupon = () => {
   };
 
   if (couponError) {
-    return <div>Error! {couponError.message}</div>;
+    return <Error502 />;
   }
 
   if (couponLoading) {
-    return <div>Loading...</div>;
+    return <Loader />;
   }
 
   return (
@@ -132,7 +131,8 @@ const Coupon = () => {
             <Collapse in={openIndex === index}>
               <Box pl={4} mt={1}>
                 <Text mb={1}>
-                  Applicable on: {coupon.applicable.join(", ")} {/* Join applicable methods */}
+                  Applicable on: {coupon.applicable.join(", ")}{" "}
+                  {/* Join applicable methods */}
                 </Text>
               </Box>
             </Collapse>

@@ -10,44 +10,111 @@ import {
   Flex,
 } from "@chakra-ui/react";
 import { IoArrowForward, IoArrowBack } from "react-icons/io5";
+import { useAddToCart } from "../../utils/cartUtils";
 
 export default function Other() {
-  const products = [
+  const { addToCart } = useAddToCart();
+
+  // iPhone data
+  const iPhones = [
     {
-      id: 1,
-      src: "https://www.thestreet.com/.image/ar_1:1%2Cc_fill%2Ccs_srgb%2Cfl_progressive%2Cq_auto:good%2Cw_1200/MTg4NzEwNjY2NDY1NDUzODA0/1-best-iphones-2022.jpg",
-      alt: "Premium Oversized SILVER Cotton T-Shirt",
-      title: "Premium Oversized SILVER Cotton T-Shirt",
-      price: 599,
-      originalPrice: 1499,
-      discount: 60,
+      _id: "66f4cdd5eec02d69bb763651",
+      model: "iPhone 7",
+      variants: [
+        {
+          _id: "66f4cdd5eec02d69bb763652",
+          color: "Gold",
+          price: "700",
+          originalPrice: "800",
+          discount: 12,
+        },
+        {
+          _id: "66f4cdd5eec02d69bb763653",
+          color: "White",
+          price: "800",
+          originalPrice: "900",
+          discount: 11,
+        },
+      ],
+    },
+    // Add more iPhone objects here
+    {
+      _id: "66f4cdd5eec02d69bb763654",
+      model: "iPhone 8",
+      variants: [
+        {
+          _id: "66f4cdd5eec02d69bb763655",
+          color: "Space Gray",
+          price: "600",
+          originalPrice: "750",
+          discount: 20,
+        },
+      ],
     },
     {
-      id: 2,
-      src: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQAortg1RecNQDKlbsAQwmK6M_51-dmyS-7KQ&s",
-      alt: "Beige Tee",
-      title: "Beige Tee",
-      price: 599,
-      originalPrice: 1499,
-      discount: 60,
+      _id: "66f4cdd5eec02d69bb763656",
+      model: "iPhone X",
+      variants: [
+        {
+          _id: "66f4cdd5eec02d69bb763657",
+          color: "Silver",
+          price: "900",
+          originalPrice: "1000",
+          discount: 30,
+        },
+      ],
     },
     {
-      id: 3,
-      src: "https://5.imimg.com/data5/ANDROID/Default/2024/2/382543291/ZP/SY/HG/84554969/product-jpeg-500x500.jpg",
-      alt: "Black Tee",
-      title: "Black Tee",
-      price: 599,
-      originalPrice: 1499,
-      discount: 60,
+      _id: "66f4cdd5eec02d69bb763658",
+      model: "iPhone XR",
+      variants: [
+        {
+          _id: "66f4cdd5eec02d69bb763659",
+          color: "Red",
+          price: "700",
+          originalPrice: "850",
+          discount: 17,
+        },
+      ],
     },
     {
-      id: 4,
-      src: "https://5.imimg.com/data5/ANDROID/Default/2024/2/382543291/ZP/SY/HG/84554969/product-jpeg-500x500.jpg",
-      alt: "BUY 2 ONLY 1299 Premium Cotton",
-      title: "BUY 2 ONLY 1299 Premium Cotton",
-      price: 999,
-      originalPrice: 2999,
-      discount: 67,
+      _id: "66f4cdd5eec02d69bb763660",
+      model: "iPhone 11",
+      variants: [
+        {
+          _id: "66f4cdd5eec02d69bb763661",
+          color: "Green",
+          price: "900",
+          originalPrice: "1100",
+          discount: 18,
+        },
+      ],
+    },
+    {
+      _id: "66f4cdd5eec02d69bb763662",
+      model: "iPhone 12",
+      variants: [
+        {
+          _id: "66f4cdd5eec02d69bb763663",
+          color: "Black",
+          price: "1000",
+          originalPrice: "1200",
+          discount: 16,
+        },
+      ],
+    },
+    {
+      _id: "66f4cdd5eec02d69bb763664",
+      model: "iPhone 13",
+      variants: [
+        {
+          _id: "66f4cdd5eec02d69bb763665",
+          color: "Blue",
+          price: "1100",
+          originalPrice: "1300",
+          discount: 15,
+        },
+      ],
     },
   ];
 
@@ -104,48 +171,59 @@ export default function Other() {
           }}
           py={2}
         >
-          {products.map((product) => (
-            <Box
-              key={product.id}
-              position="relative"
-              overflow="hidden"
-              cursor="pointer"
-              borderRadius="md"
-              role="group"
-              flexShrink={0}
-              flex="0 0 260px" // Each product box takes 240px width
-              p={4}
-              bg="white"
-            >
-              <VStack spacing={2} align="center">
-                <Image
-                  src={product.src}
-                  alt={product.alt}
-                  objectFit="cover"
-                  width="100%"
-                  height="200px" // Smaller image size
-                  borderRadius="md"
-                />
-                <Text fontWeight="bold" fontSize="md" mt={2} noOfLines={2}>
-                  {product.title}
-                </Text>
-                <HStack spacing={1}>
-                  <Text color="green.500" fontWeight="bold">
-                    ₹{product.price}
+          {iPhones.map((phone) =>
+            phone.variants.map((variant) => (
+              <Box
+                key={variant._id}
+                position="relative"
+                overflow="hidden"
+                cursor="pointer"
+                borderRadius="md"
+                role="group"
+                flexShrink={0}
+                flex="0 0 260px" // Each product box takes 240px width
+                p={4}
+                bg="white"
+              >
+                <VStack spacing={2} align="center">
+                  <Image
+                    src="https://via.placeholder.com/200" 
+                    alt={`${phone.model} ${variant.color}`}
+                    objectFit="cover"
+                    width="100%"
+                    height="200px" 
+                    borderRadius="md"
+                  />
+                  <Text fontWeight="bold" fontSize="md" mt={2} noOfLines={1}>
+                    {phone.model} - {variant.color}
                   </Text>
-                  <Text as="s" color="gray.500">
-                    ₹{product.originalPrice}
-                  </Text>
-                  <Text color="green.500" fontWeight="bold">
-                    ({product.discount}% off)
-                  </Text>
-                </HStack>
-                <Button variant="outline" color="blue" width="full" mt={2}>
-                  Add to cart
-                </Button>
-              </VStack>
-            </Box>
-          ))}
+                  <HStack spacing={1}>
+                    <Text color="blue.500" fontWeight="bold">
+                      ₹{variant.price}
+                    </Text>
+                    <Text as="s" color="gray.500">
+                      ₹{variant.originalPrice}
+                    </Text>
+                    <Text color="red.500" fontWeight="bold">
+                      ({variant.discount}% off)
+                    </Text>
+                  </HStack>
+                  <Button
+                    variant="outline"
+                    color="blue"
+                    width="full"
+                    mt={2}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // addToCart(cartItem);
+                    }}
+                  >
+                    Add to cart
+                  </Button>
+                </VStack>
+              </Box>
+            ))
+          )}
         </HStack>
       </Box>
     </Box>

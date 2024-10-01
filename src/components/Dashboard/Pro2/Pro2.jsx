@@ -12,9 +12,10 @@ import NoData from "../../NotFound/NoData";
 import Error502 from "../../NotFound/Error502";
 import Loader from "../../NotFound/Loader";
 import Dummy from "../../../assets/images/Dummy.jpg";
-
+import { useAddToCart } from "../../../utils/cartUtils";
 
 const Pro2 = () => {
+  const { addToCart } = useAddToCart();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const androidData = useSelector(selectAndroidData);
@@ -41,10 +42,6 @@ const Pro2 = () => {
     navigate(`/categories/Android/${id}`);
   };
 
-  const handleAddToCartClick = () => {
-    navigate("#");
-  };
-
   return (
     <Box p={4}>
       <Text fontSize="4xl" fontWeight="bold" mb={6} textAlign="center">
@@ -64,10 +61,20 @@ const Pro2 = () => {
           const variant = android.variants[0];
 
           // Use the first image from media[] if available, otherwise use a placeholder image
-          const imageUrl =
-            android.media.length > 0
-              ? android.media[0]
-              : Dummy;
+          const imageUrl = android.media.length > 0 ? android.media[0] : Dummy;
+
+          const cartItem = {
+            productId: android._id,
+            variantId: variant._id,
+            name: android.model,
+            color: variant.color,
+            storageOption: variant.storage,
+            price: variant.price,
+            originalPrice: variant.originalPrice,
+            priceOff: variant.priceOff,
+            quantity: 1,
+            media: imageUrl,
+          };
 
           return (
             <VStack
@@ -80,7 +87,7 @@ const Pro2 = () => {
               className="card"
               cursor="pointer"
               role="group"
-              onClick={() => handleItemClick(android._id)} 
+              onClick={() => handleItemClick(android._id)}
             >
               {/* Wrapper for image and hover button */}
               <Box position="relative" w="full">
@@ -109,8 +116,8 @@ const Pro2 = () => {
                   transition="opacity 0.3s ease"
                   _groupHover={{ opacity: 1 }}
                   onClick={(e) => {
-                    e.stopPropagation(); 
-                    handleAddToCartClick(); 
+                    e.stopPropagation();
+                    addToCart(cartItem);
                   }}
                 >
                   Add to Cart
@@ -122,7 +129,12 @@ const Pro2 = () => {
               <Text fontSize="lg" color="blue.600">
                 ₹{variant.price}
                 {variant.originalPrice && (
-                  <Text as="span" textDecoration="line-through" ml={2} color="gray">
+                  <Text
+                    as="span"
+                    textDecoration="line-through"
+                    ml={2}
+                    color="gray"
+                  >
                     ₹{variant.originalPrice}
                   </Text>
                 )}

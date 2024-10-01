@@ -34,8 +34,10 @@ import NoData from "../../NotFound/NoData";
 import Error502 from "../../NotFound/Error502";
 import Loader from "../../NotFound/Loader";
 import Dummy from "../../../assets/images/Dummy.jpg";
+import { useAddToCart } from "../../../utils/cartUtils";
 
 export default function Product() {
+  const { addToCart } = useAddToCart();
   const { name } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -80,32 +82,35 @@ export default function Product() {
     if (currentPage > 1) handlePageChange(currentPage - 1);
   };
 
-  const handleSortChange = (e) => {
-    dispatch(setSortOption(e.target.value));
-    setCurrentPage(1);
-  };
-
   // Function to sort the accessory data
   const sortedData = () => {
-    const dataCopy = [...accessoryData];
+    const allVariants = accessoryData.flatMap((product) =>
+      product.variants.map((variant) => ({
+        ...variant,
+        model: product.name,
+        media: product.media[0],
+        modelId: product._id,
+      }))
+    );
 
-    switch (sortOption) {
-      case "price-asc":
-        return dataCopy.sort(
-          (a, b) => a.variants[0].price - b.variants[0].price
-        );
-      case "price-desc":
-        return dataCopy.sort(
-          (a, b) => b.variants[0].price - a.variants[0].price
-        );
-      case "newest":
-        return dataCopy.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-        );
-      default:
-        return dataCopy;
+    let sortedVariants = [...allVariants];
+    if (sortOption === "price-asc") {
+      sortedVariants.sort((a, b) => a.price - b.price);
+    } else if (sortOption === "price-desc") {
+      sortedVariants.sort((a, b) => b.price - a.price);
+    } else if (sortOption === "newest") {
+      sortedVariants.sort(
+        (a, b) => new Date(b.createdOn) - new Date(a.createdOn)
+      );
     }
+
+    return sortedVariants;
   };
+
+  const totalVariantsCount = accessoryData.reduce(
+    (acc, product) => acc + product.variants.length,
+    0
+  );
 
   const renderPaginationButtons = () => {
     const pages = [];
@@ -183,6 +188,12 @@ export default function Product() {
     return pages;
   };
 
+  // Update the sort option when changed from dropdown
+  const handleSortChange = (event) => {
+    dispatch(setSortOption(event.target.value));
+    setCurrentPage(1);
+  };
+
   const handleClear = () => {
     setPriceRange([10, 500000]);
     setTypeOptions([]);
@@ -211,10 +222,6 @@ export default function Product() {
 
   const handleItemClick = (id) => {
     navigate(`/categories/Accessories/${id}`);
-  };
-
-  const handleAddToCartClick = () => {
-    navigate("#");
   };
 
   return (
@@ -356,9 +363,9 @@ export default function Product() {
             }}
             gap={6}
           >
-            {sortedData().map((accessory) => (
+            {sortedData().map((variant, index) => (
               <VStack
-                key={accessory._id}
+                key={variant._id}
                 spacing={3}
                 align="start"
                 p={4}
@@ -366,13 +373,13 @@ export default function Product() {
                 position="relative"
                 cursor="pointer"
                 role="group"
-                onClick={() => handleItemClick(accessory._id)}
+                onClick={() => handleItemClick(variant._id)}
               >
                 {/* Wrapper for image and hover button */}
                 <Box position="relative" w="full">
                   <Image
-                    src={accessory.media[0] || Dummy}
-                    alt={accessory.name}
+                    src={variant.media || Dummy} // Fallback image if not available
+                    alt={variant.model}
                     boxSize="full"
                     objectFit="cover"
                     transition="all 0.3s ease"
@@ -394,30 +401,42 @@ export default function Product() {
                     _groupHover={{ opacity: 1 }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleAddToCartClick();
+                      const cartItem = {
+                        productId: variant.modelId,
+                        variantId: variant._id,
+                        name: variant.model,
+                        color: variant.color,
+                        storageOption: "N/A",
+                        price: variant.price,
+                        originalPrice: variant.originalPrice,
+                        priceOff: variant.priceOff,
+                        quantity: 1,
+                        media: variant.media ? variant.media.url : Dummy,
+                      };
+                      addToCart(cartItem);
                     }}
                   >
                     Add to Cart
                   </Button>
                 </Box>
                 <Text fontWeight="semibold">
-                  {accessory.name}- {accessory.variants[0].color}
+                  {variant.model}- {variant.color}
                 </Text>
                 <Text fontSize="lg" color="blue.600">
-                  ₹{accessory.variants[0].price}
-                  {accessory.variants[0].originalPrice && (
+                  ₹{variant.price}
+                  {variant.originalPrice && (
                     <Text
                       as="span"
                       textDecoration="line-through"
                       ml={2}
                       color="gray"
                     >
-                      ₹{accessory.variants[0].originalPrice || "N/A"}
+                      ₹{variant.originalPrice || "N/A"}
                     </Text>
                   )}
-                  {accessory.variants[0].priceOff && (
+                  {variant.priceOff && (
                     <Text as="span" color="red.500" ml={2}>
-                      ({accessory.variants[0].priceOff || "0%"} off)
+                      ({variant.priceOff || "0%"} off)
                     </Text>
                   )}
                 </Text>

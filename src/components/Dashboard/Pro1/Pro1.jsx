@@ -12,8 +12,10 @@ import NoData from "../../NotFound/NoData";
 import Error502 from "../../NotFound/Error502";
 import Loader from "../../NotFound/Loader";
 import Dummy from "../../../assets/images/Dummy.jpg";
+import { useAddToCart } from "../../../utils/cartUtils";
 
 const Pro1 = () => {
+  const { addToCart } = useAddToCart();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const iPhoneData = useSelector(selectiPhoneData);
@@ -63,10 +65,20 @@ const Pro1 = () => {
           const variant = iPhone.variants[0];
 
           // Use the first image from media[] if available, otherwise use placeholder
-          const imageUrl =
-            iPhone.media.length > 0
-              ? iPhone.media[0]
-              : Dummy;
+          const imageUrl = iPhone.media.length > 0 ? iPhone.media[0] : Dummy;
+
+          const cartItem = {
+            productId: iPhone._id,
+            variantId: variant._id,
+            name: iPhone.model,
+            color: variant.color,
+            storageOption: variant.storage,
+            price: variant.price,
+            originalPrice: variant.originalPrice,
+            priceOff: variant.priceOff,
+            quantity: 1,
+            media: imageUrl,
+          };
 
           return (
             <VStack
@@ -79,7 +91,7 @@ const Pro1 = () => {
               className="card"
               cursor="pointer"
               role="group"
-              onClick={() => handleItemClick(iPhone._id)} 
+              onClick={() => handleItemClick(iPhone._id)}
             >
               {/* Wrapper for image and hover button */}
               <Box position="relative" w="full">
@@ -108,8 +120,8 @@ const Pro1 = () => {
                   transition="opacity 0.3s ease"
                   _groupHover={{ opacity: 1 }}
                   onClick={(e) => {
-                    e.stopPropagation(); 
-                    handleAddToCartClick(); 
+                    e.stopPropagation();
+                    addToCart(cartItem);
                   }}
                 >
                   Add to Cart

@@ -35,8 +35,10 @@ import NoData from "../../NotFound/NoData";
 import Error502 from "../../NotFound/Error502";
 import Loader from "../../NotFound/Loader";
 import Dummy from "../../../assets/images/Dummy.jpg";
+import { useAddToCart } from "../../../utils/cartUtils";
 
 export default function iPhones() {
+  const { addToCart } = useAddToCart();
   const { name } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -237,9 +239,6 @@ export default function iPhones() {
     navigate(`/categories/iPhone/${id}`);
   };
 
-  const handleAddToCartClick = () => {
-    navigate("#");
-  };
 
   return (
     <Box p={8} mt={16}>
@@ -414,7 +413,7 @@ export default function iPhones() {
                 position="relative"
                 cursor="pointer"
                 role="group"
-                onClick={() => handleItemClick(variant.modelId)} 
+                onClick={() => handleItemClick(variant.modelId)}
               >
                 {/* Wrapper for image and hover button */}
                 <Box position="relative" w="full">
@@ -441,8 +440,20 @@ export default function iPhones() {
                     transition="opacity 0.3s ease"
                     _groupHover={{ opacity: 1 }}
                     onClick={(e) => {
-                      e.stopPropagation(); 
-                      handleAddToCartClick(); 
+                      e.stopPropagation();
+                      const cartItem = {
+                        productId: variant.modelId,
+                        variantId: variant._id,
+                        name: variant.model,
+                        color: variant.color,
+                        storageOption: variant.storage,
+                        price: variant.price,
+                        originalPrice: variant.originalPrice,
+                        priceOff: variant.priceOff,
+                        quantity: 1,
+                        media: variant.media ? variant.media.url : Dummy, 
+                      };
+                      addToCart(cartItem);
                     }}
                   >
                     Add to Cart

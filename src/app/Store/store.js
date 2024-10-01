@@ -7,6 +7,8 @@ import androidReducer from "../Slices/androidSlice";
 import accessoryReducer from "../Slices/accessorySlice";
 import sortReducer from "../Slices/sortSlice";
 import userReducer from "../Slices/userSlice";
+import cartReducer from "../Slices/cartSlice";
+import userDataReducer from "../Slices/userDataSlice";
 
 const Store = configureStore({
   reducer: {
@@ -18,6 +20,8 @@ const Store = configureStore({
     accessory: accessoryReducer,
     sort: sortReducer,
     user: userReducer,
+    cart: cartReducer,
+    userData: userDataReducer,
   },
 });
 

@@ -12,8 +12,10 @@ import NoData from "../../NotFound/NoData";
 import Error502 from "../../NotFound/Error502";
 import Loader from "../../NotFound/Loader";
 import Dummy from "../../../assets/images/Dummy.jpg";
+import { useAddToCart } from "../../../utils/cartUtils";
 
 const Pro2 = () => {
+  const { addToCart } = useAddToCart();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const AccessoryData = useSelector(selectAccessoryData);
@@ -40,10 +42,6 @@ const Pro2 = () => {
     navigate(`/categories/Accessories/${id}`);
   };
 
-  const handleAddToCartClick = () => {
-    navigate("#");
-  };
-
   return (
     <Box p={4} bg="gray.50">
       <Text fontSize="4xl" fontWeight="bold" mb={6} textAlign="center">
@@ -65,6 +63,19 @@ const Pro2 = () => {
           // Use the first image from media[] if available, otherwise use a placeholder image
           const imageUrl =
             Accessory.media.length > 0 ? Accessory.media[0] : Dummy;
+
+          const cartItem = {
+            productId: Accessory._id,
+            variantId: variant._id,
+            name: Accessory.name,
+            color: variant.color,
+            storageOption: "N/A",
+            price: variant.price,
+            originalPrice: variant.originalPrice,
+            priceOff: variant.priceOff,
+            quantity: 1,
+            media: imageUrl,
+          };
 
           return (
             <VStack
@@ -107,7 +118,7 @@ const Pro2 = () => {
                   _groupHover={{ opacity: 1 }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleAddToCartClick();
+                    addToCart(cartItem);
                   }}
                 >
                   Add to Cart

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import Cookies from "js-cookie";
 import {
   Box,
   Text,
@@ -12,34 +13,47 @@ import {
   Select,
   Badge,
   useBreakpointValue,
+  useToast,
 } from "@chakra-ui/react";
 import Other from "./Other";
+import {
+  selectcartData,
+  selectcartError,
+  selectcartLoading,
+  getCartItemsByUserId,
+  deleteCartItem,
+} from "../../app/Slices/cartSlice";
+import { useSelector, useDispatch } from "react-redux";
+import { ChevronRightIcon } from "@chakra-ui/icons";
+import Loader from "../NotFound/Loader";
+import Error502 from "../NotFound/Error502";
+import Dummy from "../../assets/images/Dummy.jpg";
+import CouponModal from "./CouponModal";
 
 const Cart = () => {
-  const initialCartItems = [
-    {
-      id: 1,
-      name: "iPhone 13 Pro",
-      originalPrice: 129900,
-      price: 119900,
-      discount: 8,
-      size: "128GB",
-      quantity: 1,
-      imageUrl: "https://via.placeholder.com/100",
-    },
-    {
-      id: 2,
-      name: "AirPods Pro (2nd Generation)",
-      originalPrice: 24900,
-      price: 22900,
-      discount: 8,
-      size: "Standard",
-      quantity: 1,
-      imageUrl: "https://via.placeholder.com/100",
-    },
-  ];
+  const toast = useToast();
+  const isSmallScreen = useBreakpointValue({ base: true, lg: false });
 
-  const [cartItems, setCartItems] = useState(initialCartItems);
+  const dispatch = useDispatch();
+  const cartData = useSelector(selectcartData);
+  const cartError = useSelector(selectcartError);
+  const cartLoading = useSelector(selectcartLoading);
+
+  const [isCouponModalOpen, setCouponModalOpen] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [totalSavings, setTotalSavings] = useState(0);
+  const [discountAmount, setDiscountAmount] = useState(0);
+
+  // Retrieve user information from cookies
+  const user = Cookies.get("user");
+  const userId = user ? JSON.parse(user)._id : null;
+
+  useEffect(() => {
+    if (userId) {
+      dispatch(getCartItemsByUserId(userId));
+    }
+  }, [dispatch, userId]);
 
   const calculateTotal = (items) => {
     const totalAmount = items.reduce(
@@ -50,42 +64,154 @@ const Cart = () => {
       (acc, item) => acc + (item.originalPrice - item.price) * item.quantity,
       0
     );
-    return { totalAmount, totalSavings };
+
+    let discountAmount = 0;
+    if (appliedCoupon) {
+      if (appliedCoupon.discountType === "flat") {
+        discountAmount = appliedCoupon.discountValue;
+      } else if (appliedCoupon.discountType === "percentage") {
+        discountAmount = (totalAmount * appliedCoupon.discountValue) / 100;
+      }
+    }
+
+    return {
+      totalAmount: totalAmount - discountAmount,
+      totalSavings,
+      discountAmount,
+    };
   };
 
-  const { totalAmount, totalSavings } = calculateTotal(cartItems);
+  useEffect(() => {
+    const cartItems = cartData.items || [];
+    const { totalAmount, totalSavings, discountAmount } =
+      calculateTotal(cartItems);
+    setTotalAmount(totalAmount);
+    setTotalSavings(totalSavings);
+    setDiscountAmount(discountAmount);
+  }, [cartData.items, appliedCoupon]);
+
+  if (cartLoading) {
+    return <Loader />;
+  }
+
+  if (!userId) {
+    return (
+      <Box p={5} mt={24} width="100vw" mb={10}>
+        <Text fontSize="2xl" fontWeight="bold" mb={4} textAlign="center">
+          Please log in to view your cart.
+        </Text>
+      </Box>
+    );
+  }
+
+  if (cartError) {
+    return <Error502 />;
+  }
+
+  const cartItems = cartData.items || [];
+
+  const originalTotal = parseFloat(
+    cartData.items
+      .reduce((acc, item) => {
+        const price = parseFloat(item.originalPrice);
+        return acc + (isNaN(price) ? 0 : price);
+      }, 0)
+      .toFixed(2) // Round to 2 decimal places
+  );
 
   const handleQuantityChange = (itemId, newQuantity) => {
     const updatedItems = cartItems.map((item) =>
-      item.id === itemId ? { ...item, quantity: parseInt(newQuantity) } : item
+      item._id === itemId ? { ...item, quantity: parseInt(newQuantity) } : item
     );
-    setCartItems(updatedItems);
+    // dispatch(updateCart(updatedItems)); // Uncomment this if you implement an updateCart action
   };
 
-  // Responsive stacking for small screens
-  const isSmallScreen = useBreakpointValue({ base: true, lg: false });
+  const handleApplyCoupon = (coupon) => {
+    const cartTotal = totalAmount + discountAmount;
+    if (validateCoupon(coupon, cartTotal)) {
+      setAppliedCoupon(coupon);
+      toast({
+        title: "Coupon applied successfully!",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } else {
+      toast({
+        title: "Coupon is not valid or does not meet the requirements.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+    setCouponModalOpen(false);
+  };
 
-  // Payment Summary JSX to reuse based on screen size
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    toast({
+      title: "Coupon removed successfully!",
+      status: "info",
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+
+  const validateCoupon = (coupon, cartTotal) => {
+    const currentDate = new Date();
+    const expiryDate = new Date(coupon.expiryDate);
+    const isActive = coupon.status === "Active";
+    const hasRedemptionsAvailable =
+      Number(coupon.currentRedemptions) < Number(coupon.maxRedemptions);
+    const meetsMinimumPurchase = cartTotal >= Number(coupon.minimumPurchase);
+
+    return (
+      isActive &&
+      hasRedemptionsAvailable &&
+      expiryDate > currentDate &&
+      meetsMinimumPurchase
+    );
+  };
+
   const PaymentSummary = (
-    <Box w={isSmallScreen ? "100%" : "40%"}>
+    <VStack align="stretch" spacing={1} w={isSmallScreen ? "100%" : "40%"}>
+      <Box borderWidth="1px" p={4} borderRadius="md" boxShadow="sm" bg="white">
+        <VStack align="stretch" spacing={2}>
+          <Box>
+            <HStack
+              justifyContent="space-between"
+              onClick={() => setCouponModalOpen(true)}
+              cursor="pointer"
+            >
+              <Text fontSize="md" fontWeight="semibold">
+                Coupons and offers
+              </Text>
+              <Text fontSize="md" fontWeight="semibold" color="blue.500">
+                {appliedCoupon ? "1 Applied" : "2 Offers"}
+                <ChevronRightIcon fontSize={20} />
+              </Text>
+            </HStack>
+            <Text fontSize="sm" color="green.500">
+              Save your money for next time.
+            </Text>
+          </Box>
+        </VStack>
+      </Box>
+
+      <Box mt={4} />
+
       <Box borderWidth="1px" p={4} borderRadius="md" boxShadow="sm" bg="white">
         <VStack align="stretch" spacing={4}>
-          <Text fontSize="lg" fontWeight="semibold">
-            Coupons and offers
-          </Text>
-          <HStack justify="space-between">
-            <Text fontSize="sm" color="green.500">
-              2 Offers
-            </Text>
-            <Badge colorScheme="green">8% OFF</Badge>
-          </HStack>
-
-          <Divider />
-
           <VStack align="stretch" spacing={2}>
             <HStack justify="space-between">
               <Text>Item total</Text>
-              <Text>₹{totalAmount}</Text>
+              <HStack spacing={2}>
+                <Text as="s" color="gray.500">
+                  ₹{originalTotal}
+                </Text>
+                <Text>₹{totalAmount + discountAmount}</Text>{" "}
+                {/* Total before discount */}
+              </HStack>
             </HStack>
             <HStack justify="space-between">
               <Text>Delivery fee</Text>
@@ -94,27 +220,39 @@ const Cart = () => {
             <Divider />
             <HStack justify="space-between" fontWeight="semibold">
               <Text>Grand total</Text>
-              <Text>₹{totalAmount}</Text>
+              <Text>₹{totalAmount}</Text> {/* Total after discount */}
             </HStack>
             <Text fontSize="sm" color="gray.500">
               Inclusive of all taxes
             </Text>
           </VStack>
+          <Divider />
 
           <Text fontSize="sm" color="gray.500">
             Average delivery time: 3-5 days
           </Text>
-          <Text fontSize="sm" color="green.500">
-            8% (₹{totalSavings}) saved so far on this order
-          </Text>
+          <Box p={2} borderRadius="5px" textAlign="center" bg="green.100">
+            <Text fontSize="sm" color="black.500">
+              {discountAmount > 0
+                ? `You saved ₹${discountAmount} more on this order`
+                : `(₹${
+                    originalTotal - totalAmount
+                  }) saved so far on this order`}
+            </Text>
+          </Box>
+          <Divider />
 
-          <Button mt={4} colorScheme="blue" size="lg" w="full">
+          <Button mt={2} colorScheme="blue" size="lg" w="full">
             Continue
           </Button>
         </VStack>
       </Box>
-    </Box>
+    </VStack>
   );
+
+  const handleDelete = (userId, productId, variantId) => {
+    dispatch(deleteCartItem({ userId, productId, variantId }));
+  };
 
   return (
     <>
@@ -123,89 +261,118 @@ const Cart = () => {
           Shopping Cart ({cartItems.length} Items)
         </Text>
 
-        {/* Render the payment box beside the cart items on large screens */}
         <Stack direction={isSmallScreen ? "column" : "row"} spacing={6}>
-          {/* Cart Items */}
           <Box w={isSmallScreen ? "100%" : "60%"}>
             <Stack spacing={6}>
-              {cartItems.map((item) => (
-                <Box
-                  key={item.id}
-                  p={4}
-                  borderWidth="1px"
-                  borderRadius="md"
-                  boxShadow="sm"
-                  bg="white"
+              {cartItems.length === 0 ? (
+                <Flex
+                  height="40vh"
+                  alignItems="center"
+                  justifyContent="center"
+                  textAlign="center"
+                  flexDirection="column"
                 >
-                  <Flex justify="space-between" align="center">
-                    <HStack>
-                      <Image
-                        src={item.imageUrl}
-                        alt={item.name}
-                        boxSize="100px"
-                      />
-                      <VStack align="start" spacing={1}>
-                        <Text fontWeight="semibold" fontSize="lg">
-                          {item.name}
-                        </Text>
-                        <HStack>
-                          <Text as="s" color="gray.500">
-                            ₹{item.originalPrice}
+                  <Image src={Dummy} alt="Empty Cart" boxSize="150px" />
+                  <Text fontSize="lg">Your cart is empty.</Text>
+                  <Text>Please add items to the cart.</Text>
+                </Flex>
+              ) : (
+                cartItems.map((item) => (
+                  <Box
+                    key={item._id}
+                    p={4}
+                    borderWidth="1px"
+                    borderRadius="md"
+                    boxShadow="sm"
+                    bg="white"
+                  >
+                    <Flex justify="space-between" align="center">
+                      <HStack>
+                        <Image
+                          src={item.media || Dummy}
+                          alt={item.name}
+                          boxSize="100px"
+                        />
+                        <VStack align="start" spacing={1}>
+                          <Text fontWeight="semibold" fontSize="lg">
+                            {item.name}
                           </Text>
-                          <Text color="green.500">
-                            ₹{item.price} ({item.discount}% off)
+                          <HStack>
+                            <Text as="s" color="gray.500">
+                              ₹{item.originalPrice}
+                            </Text>
+                            <Text color="green.500">
+                              ₹{item.price} ({item.priceOff} off)
+                            </Text>
+                          </HStack>
+                          <Text fontSize="sm" color="gray.500">
+                            You saved ₹{item.originalPrice - item.price}
                           </Text>
-                        </HStack>
-                        <Text fontSize="sm" color="gray.500">
-                          You saved ₹{item.originalPrice - item.price}
-                        </Text>
-                        <Flex>
-                          <Select size="sm" defaultValue={item.size} w="100px">
-                            <option value="128GB">128GB</option>
-                            <option value="256GB">256GB</option>
-                            <option value="512GB">512GB</option>
-                          </Select>
-                          <Select
-                            size="sm"
-                            value={item.quantity}
-                            onChange={(e) =>
-                              handleQuantityChange(item.id, e.target.value)
-                            }
-                            w="60px"
-                            ml={2}
-                          >
-                            {[...Array(5).keys()].map((x) => (
-                              <option key={x + 1} value={x + 1}>
-                                {x + 1}
-                              </option>
-                            ))}
-                          </Select>
-                        </Flex>
-                      </VStack>
-                    </HStack>
-                    <Button variant="outline" colorScheme="red" size="sm">
-                      Remove
-                    </Button>
-                  </Flex>
-                </Box>
-              ))}
+                          <Flex>
+                            <Select
+                              size="sm"
+                              defaultValue={item.storageOption}
+                              w="100px"
+                            >
+                              <option value="64GB">64GB</option>
+                              <option value="128GB">128GB</option>
+                              <option value="256GB">256GB</option>
+                              <option value="512GB">512GB</option>
+                            </Select>
+                            <Select
+                              size="sm"
+                              value={item.quantity}
+                              onChange={(e) =>
+                                handleQuantityChange(item._id, e.target.value)
+                              }
+                              w="60px"
+                              ml={2}
+                            >
+                              {[...Array(5).keys()].map((x) => (
+                                <option key={x + 1} value={x + 1}>
+                                  {x + 1}
+                                </option>
+                              ))}
+                            </Select>
+                          </Flex>
+                        </VStack>
+                      </HStack>
+                      <Button
+                        variant="outline"
+                        colorScheme="red"
+                        size="sm"
+                        onClick={() =>
+                          handleDelete(userId, item.productId, item.variantId)
+                        }
+                      >
+                        Remove
+                      </Button>
+                    </Flex>
+                  </Box>
+                ))
+              )}
             </Stack>
           </Box>
 
-          {/* Show Payment Box beside cart items only on large screens */}
-          {!isSmallScreen && PaymentSummary}
+          {!isSmallScreen && cartItems.length > 0 && PaymentSummary}
         </Stack>
       </Box>
 
-      {/* Render Other section */}
       <Other />
 
-      {/* Show Payment Box below "Other" section on small screens */}
-      {isSmallScreen && (
+      {isSmallScreen && cartItems.length > 0 && (
         <Box p={5} maxW="90vw" mx="auto">
           {PaymentSummary}
         </Box>
       )}
+
+      <CouponModal
+        isOpen={isCouponModalOpen}
+        onClose={() => setCouponModalOpen(false)}
+        onApplyCoupon={handleApplyCoupon}
+        onRemoveCoupon={handleRemoveCoupon}
+        appliedCoupon={appliedCoupon}
+      />
     </>
   );
 };

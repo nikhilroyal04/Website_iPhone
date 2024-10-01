@@ -14,16 +14,24 @@ import {
 } from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
 
+const orderStatuses = [
+  "Pending",
+  "Shipped",
+  "Delivered",
+  "Cancelled",
+  "Returned",
+  "Refunded",
+];
+
 export default function Filter({
   isOpen,
   onClose,
   onFilterChange,
   selectedFilter,
 }) {
-  // This will ensure the modal closes on radio change
   const handleRadioChange = (value) => {
-    onClose(); 
-    onFilterChange(value); 
+    onFilterChange(value); // Trigger filter change
+    onClose(); // Close the modal
   };
 
   return (
@@ -50,11 +58,15 @@ export default function Filter({
         <ModalBody>
           <VStack spacing={3} align="left" mb={5}>
             <RadioGroup onChange={handleRadioChange} value={selectedFilter}>
-              <VStack spacing={4} align="start">
-                <Radio value="all">All Orders</Radio>
-                <Radio value="completed">Completed Orders</Radio>
-                <Radio value="active">Active Orders</Radio>
-                <Radio value="failed">Failed Orders</Radio>
+              <VStack spacing={3} align="start">
+                {/* Render Radio buttons with order statuses */}
+                <Radio value="all">All Orders</Radio>{" "}
+                {/* Add All Orders radio */}
+                {orderStatuses.map((status) => (
+                  <Radio key={status} value={status}>
+                    All {status} orders
+                  </Radio>
+                ))}
               </VStack>
             </RadioGroup>
           </VStack>

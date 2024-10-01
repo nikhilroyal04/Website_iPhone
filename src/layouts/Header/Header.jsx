@@ -1,3 +1,4 @@
+import React, { useEffect } from "react";
 import {
   Box,
   Flex,
@@ -8,13 +9,30 @@ import {
   useMediaQuery,
 } from "@chakra-ui/react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 import { SearchIcon } from "@chakra-ui/icons";
 import Logo from "../Logo/Logo";
 import Sidebar from "../Sidebar/Sidebar";
 import { BiMenuAltLeft } from "react-icons/bi";
 import SearchDrawer from "../Search/Search";
+import {
+  getCartItemsByUserId,
+  selectcartData,
+} from "../../app/Slices/cartSlice";
+import { selectUser } from "../../app/Slices/authSlice";
 
 const Header = () => {
+  const cartItems = useSelector(selectcartData);
+  const user = useSelector(selectUser);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const userId = user ? user._id : null;
+
+  useEffect(() => {
+    dispatch(getCartItemsByUserId(userId));
+  }, [dispatch]);
+
   const {
     isOpen: isSearchDrawerOpen,
     onOpen: onSearchDrawerOpen,
@@ -22,11 +40,12 @@ const Header = () => {
   } = useDisclosure();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isSmallerThanMd] = useMediaQuery("(max-width: 992px)");
-  const navigate = useNavigate();
 
   const handleClick = () => {
     navigate("/");
   };
+
+  const items = cartItems?.items?.length || "";
 
   return (
     <>
@@ -119,13 +138,14 @@ const Header = () => {
 
               <Flex
                 align="center"
-                flex="1"
+                alignItems="center"
                 onClick={handleClick}
                 bg="white"
                 cursor="pointer"
                 ml={isSmallerThanMd ? 0 : "320"}
+                mx="auto"
               >
-                <Text fontSize="2xl" my={2} fontWeight="600" mr={3}>
+                <Text fontSize="2xl" my={2} fontWeight="600" mr={1}>
                   Guru's
                 </Text>
                 <Logo width="auto" height="40px" />
@@ -148,7 +168,7 @@ const Header = () => {
                   fontWeight="600"
                   color="blue.600"
                 >
-                  Cart (1)
+                  Cart ({items})
                 </Text>
               </HStack>
             </Flex>

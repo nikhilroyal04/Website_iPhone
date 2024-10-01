@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -17,57 +17,135 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
+import { useDispatch } from "react-redux";
+import {
+  addUserAddress,
+  updateUserAddress,
+} from "../../app/Slices/userDataSlice";
 
 const states = [
-  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
-  "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", 
-  "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", 
-  "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", 
-  "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", 
-  "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands",
-  "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Lakshadweep", 
-  "Delhi", "Puducherry"
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+  "Andaman and Nicobar Islands",
+  "Chandigarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Lakshadweep",
+  "Delhi",
+  "Puducherry",
 ];
 
-export default function Address({ isOpen, onClose }) {
+export default function Address({ isOpen, onClose, selectedAddress, userId }) {
+  const dispatch = useDispatch();
   const [name, setName] = useState("");
-  const [mobile, setMobile] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
+  const [addressLine1, setAddressLine1] = useState("");
   const [locality, setLocality] = useState("");
   const [landmark, setLandmark] = useState("");
   const [pincode, setPincode] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
 
-  const isEmailValid = email.match(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/);
-  const isMobileValid = mobile.match(/^\d{10}$/);
-  const isPincodeValid = pincode.match(/^\d{6}$/);
+  const isEmailValid = email
+    ? email.match(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/)
+    : true;
+  const isPhoneNumberValid = phoneNumber ? phoneNumber.match(/^\d{10}$/) : true;
+  const isPincodeValid = pincode ? pincode.match(/^\d{6}$/) : true;
 
-  const canSave = 
-    name && 
-    mobile && isMobileValid && 
-    email && isEmailValid && 
-    address && 
-    locality && 
-    landmark && 
-    pincode && isPincodeValid && 
-    city && state;
+  const canSave =
+    name &&
+    phoneNumber &&
+    isPhoneNumberValid &&
+    email &&
+    isEmailValid &&
+    addressLine1 &&
+    locality &&
+    landmark &&
+    pincode &&
+    isPincodeValid &&
+    city &&
+    state;
 
   const handleSave = () => {
-    // Add save logic here (e.g., API call)
-    // Clear all fields
+    const addressData = {
+      name,
+      phoneNumber,
+      email,
+      addressLine1,
+      locality,
+      landmark,
+      pincode,
+      city,
+      state,
+    };
+
+    if (selectedAddress) {
+      dispatch(updateUserAddress(userId, selectedAddress._id, addressData));
+    } else {
+      dispatch(addUserAddress(userId, addressData));
+    }
+
+    clearFields();
+    onClose();
+  };
+
+  const clearFields = () => {
     setName("");
-    setMobile("");
+    setPhoneNumber("");
     setEmail("");
-    setAddress("");
+    setAddressLine1("");
     setLocality("");
     setLandmark("");
     setPincode("");
     setCity("");
     setState("");
-    onClose(); // Close the modal
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      if (selectedAddress) {
+        setName(selectedAddress.name);
+        setPhoneNumber(selectedAddress.phoneNumber);
+        setEmail(selectedAddress.email);
+        setAddressLine1(selectedAddress.addressLine1);
+        setLocality(selectedAddress.locality);
+        setLandmark(selectedAddress.landmark);
+        setPincode(selectedAddress.pincode);
+        setCity(selectedAddress.city);
+        setState(selectedAddress.state);
+      } else {
+        clearFields(); // Clear fields when adding a new address
+      }
+    } else {
+      clearFields(); // Clear fields when the modal is closed
+    }
+  }, [selectedAddress, isOpen]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="4xl" isCentered>
@@ -93,11 +171,14 @@ export default function Address({ isOpen, onClose }) {
         }}
       >
         <ModalHeader>
-          Add New Address
+          {selectedAddress ? "Edit Address" : "Add New Address"}
           <IconButton
             aria-label="Close"
             icon={<CloseIcon />}
-            onClick={onClose}
+            onClick={() => {
+              clearFields(); // Clear fields when modal is closed
+              onClose();
+            }}
             position="absolute"
             right="8px"
             top="8px"
@@ -108,31 +189,37 @@ export default function Address({ isOpen, onClose }) {
           <VStack spacing={4} align="stretch">
             <FormControl isRequired>
               <FormLabel>Name</FormLabel>
-              <Input 
-                placeholder="Enter your name" 
-                value={name} 
-                onChange={(e) => setName(e.target.value)} 
+              <Input
+                placeholder="Enter your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
               />
             </FormControl>
 
             <HStack spacing={4}>
-              <FormControl isRequired isInvalid={!isMobileValid && mobile.length > 0}>
+              <FormControl
+                isRequired
+                isInvalid={!isPhoneNumberValid && phoneNumber.length > 0}
+              >
                 <FormLabel>Mobile</FormLabel>
-                <Input 
-                  placeholder="Enter your mobile number" 
-                  value={mobile} 
-                  onChange={(e) => setMobile(e.target.value)} 
+                <Input
+                  placeholder="Enter your mobile number"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
                 />
-                {!isMobileValid && mobile.length > 0 && (
+                {!isPhoneNumberValid && phoneNumber.length > 0 && (
                   <FormErrorMessage>Invalid mobile number</FormErrorMessage>
                 )}
               </FormControl>
-              <FormControl isRequired isInvalid={!isEmailValid && email.length > 0}>
+              <FormControl
+                isRequired
+                isInvalid={!isEmailValid && email.length > 0}
+              >
                 <FormLabel>Email</FormLabel>
-                <Input 
-                  placeholder="Enter your email" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
+                <Input
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
                 {!isEmailValid && email.length > 0 && (
                   <FormErrorMessage>Invalid email address</FormErrorMessage>
@@ -142,39 +229,42 @@ export default function Address({ isOpen, onClose }) {
 
             <FormControl isRequired>
               <FormLabel>Address</FormLabel>
-              <Input 
-                placeholder="Enter your address" 
-                value={address} 
-                onChange={(e) => setAddress(e.target.value)} 
+              <Input
+                placeholder="Enter your address"
+                value={addressLine1}
+                onChange={(e) => setAddressLine1(e.target.value)}
               />
             </FormControl>
 
             <HStack spacing={4}>
               <FormControl isRequired>
                 <FormLabel>Locality</FormLabel>
-                <Input 
-                  placeholder="Enter locality" 
-                  value={locality} 
-                  onChange={(e) => setLocality(e.target.value)} 
+                <Input
+                  placeholder="Enter locality"
+                  value={locality}
+                  onChange={(e) => setLocality(e.target.value)}
                 />
               </FormControl>
               <FormControl isRequired>
                 <FormLabel>Landmark</FormLabel>
-                <Input 
-                  placeholder="Enter landmark" 
-                  value={landmark} 
-                  onChange={(e) => setLandmark(e.target.value)} 
+                <Input
+                  placeholder="Enter landmark"
+                  value={landmark}
+                  onChange={(e) => setLandmark(e.target.value)}
                 />
               </FormControl>
             </HStack>
 
             <HStack spacing={4}>
-              <FormControl isRequired isInvalid={!isPincodeValid && pincode.length > 0}>
+              <FormControl
+                isRequired
+                isInvalid={!isPincodeValid && pincode.length > 0}
+              >
                 <FormLabel>Pincode</FormLabel>
-                <Input 
-                  placeholder="Enter pincode" 
-                  value={pincode} 
-                  onChange={(e) => setPincode(e.target.value)} 
+                <Input
+                  placeholder="Enter pincode"
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value)}
                 />
                 {!isPincodeValid && pincode.length > 0 && (
                   <FormErrorMessage>Pincode must be 6 digits</FormErrorMessage>
@@ -182,20 +272,20 @@ export default function Address({ isOpen, onClose }) {
               </FormControl>
               <FormControl isRequired>
                 <FormLabel>City</FormLabel>
-                <Input 
-                  placeholder="Enter city" 
-                  value={city} 
-                  onChange={(e) => setCity(e.target.value)} 
+                <Input
+                  placeholder="Enter city"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
                 />
               </FormControl>
             </HStack>
 
             <FormControl isRequired>
               <FormLabel>State</FormLabel>
-              <Select 
-                placeholder="Select state" 
-                value={state} 
-                onChange={(e) => setState(e.target.value)} 
+              <Select
+                placeholder="Select state"
+                value={state}
+                onChange={(e) => setState(e.target.value)}
                 width="50%"
               >
                 {states.map((state, index) => (
@@ -215,7 +305,7 @@ export default function Address({ isOpen, onClose }) {
             isDisabled={!canSave}
             mx="auto"
           >
-            Save Address
+            {selectedAddress ? "Update Address" : "Save Address"}
           </Button>
         </ModalFooter>
       </ModalContent>

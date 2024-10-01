@@ -14,26 +14,64 @@ import {
   useMediaQuery,
   useDisclosure,
   Heading,
+  Badge,
 } from "@chakra-ui/react";
 import { TfiMenu, TfiLocationPin } from "react-icons/tfi";
 import { GoSignOut } from "react-icons/go";
 import { CiFilter } from "react-icons/ci";
 import { AiOutlinePlus } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
-import Filter from "./Filter"; // Import the Filter component
+import Filter from "./Filter";
 import Address from "./Address";
-import Login from "../Auth/Login"; // Import the Login component
+import Login from "../Auth/Login";
 import { useDispatch, useSelector } from "react-redux";
 import { selectUser, logout } from "../../app/Slices/authSlice";
+import {
+  selectUserData,
+  selectUserDataError,
+  selectUserDataLoading,
+  getUserDataItemsByUserId,
+  deleteUserAddress,
+} from "../../app/Slices/userDataSlice";
+import DeleteConfirmationModal from "./DeleteConfimationModal";
+import OrderDetailsModal from "./OrderDetailsModal";
+import TimeConversion from "../../utils/timeConversion";
+import Loader from "../NotFound/Loader";
+import Error502 from "../NotFound/Error502";
 
 export default function Account() {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const userData = useSelector(selectUserData);
+  const userDataError = useSelector(selectUserDataError);
+  const userDataLoading = useSelector(selectUserDataLoading);
+
+  const user = useSelector(selectUser);
+  const userId = user ? user._id : null;
+
+  useEffect(() => {
+    if (userId) {
+      dispatch(getUserDataItemsByUserId(userId));
+    }
+  }, [dispatch, userId]);
+
   const [selectedTab, setSelectedTab] = useState("orders");
   const [showSidebar, setShowSidebar] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [isLargeScreen, setIsLargeScreen] = useState(false);
+
+  // Add state for the selected address
+  const [selectedAddress, setSelectedAddress] = useState(null);
+
+  // Delete confirmation modal state and functions
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [addressToDelete, setAddressToDelete] = useState(null);
+
+  // Add state for Order Details Modal
+  const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
   const [isLargerThanLg] = useMediaQuery("(min-width: 62em)");
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   const {
     isOpen: isFilterOpen,
@@ -51,12 +89,10 @@ export default function Account() {
     onClose: onLoginClose,
   } = useDisclosure();
 
-  const user = useSelector(selectUser);
-
   // Trigger login modal on /account route if not logged in
   useEffect(() => {
     if (!user && window.location.pathname === "/account") {
-      onLoginOpen(); // Auto-open the modal when navigating to /account if not logged in
+      onLoginOpen();
     }
   }, [user, onLoginOpen]);
 
@@ -84,6 +120,59 @@ export default function Account() {
   const handleSignOut = () => {
     dispatch(logout());
     navigate("/"); // Redirect to home page after sign out
+  };
+
+  // Handle address delete request
+  const handleDelete = (id) => {
+    setAddressToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  // Confirm deletion of address
+  const confirmDelete = () => {
+    if (addressToDelete) {
+      // Dispatch action to delete the address
+      dispatch(deleteUserAddress(userId, addressToDelete));
+
+      // Clear the address to delete and close the modal
+      setAddressToDelete(null);
+      setIsDeleteModalOpen(false);
+    }
+  };
+
+  const handleEdit = (address) => {
+    setSelectedAddress(address);
+    onAddressOpen();
+  };
+
+  const handleAddNewAddress = () => {
+    setSelectedAddress(null);
+    onAddressOpen();
+  };
+
+  // Function to open the order details modal
+  const handleViewDetails = (order) => {
+    setSelectedOrder(order);
+    setIsOrderDetailsOpen(true);
+  };
+
+  const getOrderStatusColor = (status) => {
+    switch (status) {
+      case "Pending":
+        return "yellow";
+      case "Shipped":
+        return "green";
+      case "Delivered":
+        return "blue";
+      case "Cancelled":
+        return "red";
+      case "Returned":
+        return "purple";
+      case "Refunded":
+        return "gray";
+      default:
+        return "gray";
+    }
   };
 
   return (
@@ -173,7 +262,7 @@ export default function Account() {
               cursor="pointer"
               p={2}
               borderRadius="md"
-              onClick={handleSignOut} // Use the sign-out function
+              onClick={handleSignOut}
             >
               <Text fontSize="xl" display="flex" alignItems="center">
                 <Icon as={GoSignOut} mr={2} />
@@ -204,114 +293,173 @@ export default function Account() {
         {/* Main Content */}
         {(showSidebar === false || isLargeScreen) && (
           <Box width={{ base: "100%", lg: "70%" }} p={3}>
-            {selectedTab === "orders" && (
+            {userDataLoading && <Loader />}
+            {userDataError && <Error502 />}
+            {!userDataLoading && !userDataError && (
               <>
-                <HStack spacing={4} mb={4} align="center">
-                  <Text fontSize="lg" flex="1">
-                    Showing{" "}
-                    {selectedFilter === "all"
-                      ? "all orders"
-                      : `${selectedFilter} orders`}
-                  </Text>
-                  <Button
-                    leftIcon={<CiFilter />}
-                    color="blue"
-                    bg="white"
-                    variant="outline"
-                    onClick={onFilterOpen} // Open the filter modal on click
-                  >
-                    Filter
-                  </Button>
-                </HStack>
-
-                {/* Render User Orders */}
-                <VStack spacing={4} align="start">
-                  {user?.myOrders && user.myOrders.length > 0 ? (
-                    user.myOrders.map((order, index) => (
-                      <Box
-                        key={index}
-                        p={4}
-                        shadow="md"
-                        borderWidth="1px"
-                        borderRadius="md"
-                        width="full"
-                      >
-                        <Heading as="h3" size="md" mb={2}>
-                          Order #{order.id}
-                        </Heading>
-                        <Text mb={2}>{order.details}</Text>
-                        <Button variant="link" color="blue.600">
-                          View Details
-                        </Button>
-                      </Box>
-                    ))
-                  ) : (
-                    <Box
-                      width="full"
-                      display="flex"
-                      justifyContent="center"
-                      alignItems="center"
-                      height="60vh"
-                    >
-                      <Text textAlign="center" fontSize="xl">
-                        No orders found.
+                {selectedTab === "orders" && (
+                  <>
+                    <HStack spacing={4} mb={4} align="center">
+                      <Text fontSize="lg" flex="1">
+                        Showing{" "}
+                        {selectedFilter === "all"
+                          ? "all orders"
+                          : `${selectedFilter} orders`}
                       </Text>
-                    </Box>
-                  )}
-                </VStack>
-              </>
-            )}
+                      <Button
+                        leftIcon={<CiFilter />}
+                        color="blue"
+                        bg="white"
+                        variant="outline"
+                        onClick={onFilterOpen} // Open the filter modal on click
+                      >
+                        Filter
+                      </Button>
+                    </HStack>
 
-            {selectedTab === "addresses" && (
-              <>
-                <HStack spacing={4} mb={4} align="center">
-                  <Text fontSize="lg" flex="1">
-                    My Addresses
-                  </Text>
-                </HStack>
+                    {/* Render User Orders */}
+                    <VStack spacing={4} align="start">
+                      {userData?.orders && userData.orders.length > 0 ? (
+                        userData.orders
+                          .filter((order) =>
+                            selectedFilter === "all"
+                              ? true
+                              : order.orderStatus === selectedFilter
+                          )
+                          .map((order, index) => (
+                            <Box
+                              key={index}
+                              p={4}
+                              shadow="md"
+                              borderWidth="1px"
+                              borderRadius="md"
+                              width="full"
+                              _hover={{ shadow: "lg", borderColor: "blue.300" }} // Add hover effect
+                              transition="0.2s ease"
+                            >
+                              <Heading as="h3" size="md" mb={2}>
+                                {order.productName}
+                              </Heading>
+                              <Badge
+                                colorScheme={getOrderStatusColor(
+                                  order.orderStatus
+                                )}
+                                mb={2}
+                              >
+                                {order.orderStatus}
+                              </Badge>
+                              <Text fontSize="sm" mb={2}>
+                                {TimeConversion.unixTimeToRealTime(
+                                  order.createdOn
+                                )}
+                              </Text>
+                              <Button
+                                variant="link"
+                                color="blue.600"
+                                onClick={() => handleViewDetails(order)}
+                              >
+                                View Details
+                              </Button>
+                            </Box>
+                          ))
+                      ) : (
+                        <Box
+                          width="full"
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                          height="60vh"
+                        >
+                          <Text textAlign="center" fontSize="xl">
+                            No orders found.
+                          </Text>
+                        </Box>
+                      )}
+                    </VStack>
+                  </>
+                )}
 
-                {/* Render User Addresses */}
-                <VStack spacing={4} align="start">
-                  {user?.myAddresses && user.myAddresses.length > 0 ? (
-                    user.myAddresses.map((address, index) => (
+                {selectedTab === "addresses" && (
+                  <>
+                    <HStack spacing={4} mb={4} align="center">
+                      <Text fontSize="lg" flex="1">
+                        My Addresses
+                      </Text>
+                    </HStack>
+
+                    {/* Render User Addresses */}
+                    <SimpleGrid
+                      columns={{ base: 1, sm: 2, md: 3, lg: 3 }}
+                      spacing={4}
+                      width="full"
+                    >
+                      {userData?.addresses && userData.addresses.length > 0 ? (
+                        userData.addresses.map((address) => (
+                          <Box
+                            key={address._id}
+                            p={4}
+                            shadow="md"
+                            borderWidth="1px"
+                            borderRadius="md"
+                            width="full"
+                          >
+                            <Text fontWeight="bold">{address.name}</Text>
+                            <Text>{address.email}</Text>
+                            <Text>{address.addressLine1}</Text>
+                            <Text>
+                              {address.city}-{address.pincode}
+                            </Text>
+                            <HStack mt={2}>
+                              <Button
+                                colorScheme="blue"
+                                variant="outline"
+                                size="xs"
+                                onClick={() => handleEdit(address)}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                colorScheme="red"
+                                variant="outline"
+                                size="xs"
+                                onClick={() => handleDelete(address._id)}
+                              >
+                                Delete
+                              </Button>
+                            </HStack>
+                          </Box>
+                        ))
+                      ) : (
+                        <Text>No addresses found.</Text>
+                      )}
+
+                      {/* Add New Address Button */}
                       <Box
-                        key={index}
                         p={4}
                         shadow="md"
                         borderWidth="1px"
                         borderRadius="md"
-                        width="full"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        borderStyle="dashed"
+                        onClick={handleAddNewAddress}
+                        cursor="pointer"
                       >
-                        <Text>{address.details}</Text>
+                        <Center>
+                          <Icon
+                            as={AiOutlinePlus}
+                            boxSize={8}
+                            color="blue.600"
+                          />
+                          <Text ml={2} color="blue.600">
+                            Add New Address
+                          </Text>
+                        </Center>
                       </Box>
-                    ))
-                  ) : (
-                    <Text>No addresses found.</Text>
-                  )}
-
-                  {/* Add New Address Button */}
-                  <SimpleGrid columns={[1, 2]} spacing={4}>
-                    <Box
-                      p={4}
-                      shadow="md"
-                      borderWidth="1px"
-                      borderRadius="md"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      borderStyle="dashed"
-                      onClick={onAddressOpen}
-                      cursor="pointer"
-                    >
-                      <Center>
-                        <Icon as={AiOutlinePlus} boxSize={8} color="blue.600" />
-                        <Text ml={2} color="blue.600">
-                          Add New Address
-                        </Text>
-                      </Center>
-                    </Box>
-                  </SimpleGrid>
-                </VStack>
+                    </SimpleGrid>
+                  </>
+                )}
               </>
             )}
           </Box>
@@ -327,7 +475,26 @@ export default function Account() {
       />
 
       {/* Address Modal */}
-      <Address isOpen={isAddressOpen} onClose={onAddressClose} />
+      <Address
+        isOpen={isAddressOpen}
+        onClose={onAddressClose}
+        selectedAddress={selectedAddress}
+        userId={userId}
+      />
+
+      {/* Delete Confirmation Modal */}
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+      />
+
+      <OrderDetailsModal
+        isOpen={isOrderDetailsOpen}
+        onClose={() => setIsOrderDetailsOpen(false)}
+        order={selectedOrder}
+      />
 
       {/* Login Modal */}
       <Login isOpen={isLoginOpen} onClose={onLoginClose} onOpen={onLoginOpen} />

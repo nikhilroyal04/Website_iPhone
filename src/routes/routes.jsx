@@ -20,6 +20,7 @@ import NetworkError from "../components/NotFound/NetworkError";
 import ADView from "../components/Products/androids/adView";
 import IView from "../components/Products/iPhones/iView";
 import AcView from "../components/Products/accessories/acView";
+import NotFound from "../components/NotFound/NotFound";
 
 const Routing = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -82,9 +83,7 @@ const CategoryHandler = () => {
     accessories: <Accessories />,
   };
 
-  return (
-    categoryComponents[name.toLowerCase()] || <div>Category not found</div>
-  );
+  return categoryComponents[name.toLowerCase()] || <NotFound />;
 };
 
 export default Routing;

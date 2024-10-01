@@ -10,7 +10,7 @@ const userSlice = createSlice({
   },
   reducers: {
     setUserData: (state, action) => {
-      state.data.push(action.payload); // Add new user to the existing data
+      state.data.push(action.payload);
       state.isLoading = false;
       state.error = null;
     },
@@ -31,13 +31,32 @@ export const { setUserData, setUserLoading, setUserError } = userSlice.actions;
 export const addUser = (userData) => async (dispatch) => {
   dispatch(setUserLoading()); // Start loading state
   try {
+    // First request to create the user
     const response = await axios.post(
-      import.meta.env.VITE_BASE_URL + "user/addUser", 
+      import.meta.env.VITE_BASE_URL + "user/addUser",
       userData
     );
+
+    // Dispatch the success action with user data
     dispatch(setUserData(response.data.data));
-    return response.data; 
+
+    // Second request to create the user by userId
+    const userId = response.data.data._id;
+    await axios.post(
+      import.meta.env.VITE_BASE_URL + `userData/create/${userId}`
+    );
+
+    // Create Cart
+
+    await axios.post(
+      import.meta.env.VITE_BASE_URL + `cart/createCart`,
+      {userId}
+    );
+
+    // You can handle the response of this request if needed
+    return response.data;
   } catch (error) {
+    // Dispatch an error action
     dispatch(setUserError(error.message));
   }
 };
