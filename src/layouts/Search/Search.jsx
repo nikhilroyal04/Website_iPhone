@@ -15,6 +15,7 @@ import {
   Grid,
   Button,
   Image,
+  Flex,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
@@ -41,6 +42,7 @@ import {
   selectAccessoryData,
   fetchAccessoryData,
 } from "../../app/Slices/accessorySlice";
+import Fetch201 from "../../components/NotFound/Fetch201";
 
 const SearchDrawer = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
@@ -53,6 +55,7 @@ const SearchDrawer = ({ isOpen, onClose }) => {
   const accessoryData = useSelector(selectAccessoryData);
   const [searchTerm, setSearchTerm] = useState("");
   const [combinedResults, setCombinedResults] = useState([]);
+  const [isLoadingSearch, setIsLoadingSearch] = useState(false);
 
   // Adjust size based on breakpoint
   const drawerSize = useBreakpointValue({ base: "full", lg: "lg" });
@@ -63,9 +66,10 @@ const SearchDrawer = ({ isOpen, onClose }) => {
 
   useEffect(() => {
     if (searchTerm.length >= 4) {
-      dispatch(fetchiPhoneData(searchTerm));
-      dispatch(fetchAndroidData(searchTerm));
-      dispatch(fetchAccessoryData(searchTerm));
+      setIsLoadingSearch(true);
+      dispatch(fetchiPhoneData(1, searchTerm));
+      dispatch(fetchAndroidData(1, searchTerm));
+      dispatch(fetchAccessoryData(1, searchTerm));
     }
   }, [searchTerm, dispatch]);
 
@@ -73,9 +77,8 @@ const SearchDrawer = ({ isOpen, onClose }) => {
     // Combine the data whenever iPhone, Android, or Accessory data changes
     const combinedData = [...iPhoneData, ...androidData, ...accessoryData];
     setCombinedResults(combinedData);
+    setIsLoadingSearch(false);
   }, [iPhoneData, androidData, accessoryData]);
-
-  console.log("data", combinedResults);
 
   const handleClick = (category) => {
     navigate(`/categories/${category}`);
@@ -93,45 +96,164 @@ const SearchDrawer = ({ isOpen, onClose }) => {
     return <NoData />;
   }
 
+  const handleView = (id, categoryName) => {
+    navigate(`/categories/${categoryName}/${id}`);
+    onClose();
+    setSearchTerm("");
+  };
+
+  // Reset search term when drawer closes
+  const handleDrawerClose = () => {
+    setSearchTerm("");
+    onClose();
+  };
+
   return (
     <Drawer
       isOpen={isOpen}
       placement="right"
-      onClose={onClose}
+      onClose={handleDrawerClose}
       size={drawerSize}
     >
       <DrawerOverlay>
         <DrawerContent>
           <DrawerCloseButton fontSize={20} mt={2} mr={5} />
           <DrawerHeader>
-            <Text fontSize="3xl" fontWeight="800">
+            <Text fontSize="3xl" fontWeight="800" mb={5}>
               Search
             </Text>
+            <Box>
+              {" "}
+              <Input
+                placeholder="What are you looking for?"
+                size="lg"
+                mb={4}
+                variant="outline"
+                pl="10"
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <Icon
+                as={SearchIcon}
+                position="absolute"
+                top={{ base: "16%", sm: "17%" }} // 'base' is for small screens, 'md' for medium and larger screens
+                left="9"
+                transform="translateY(-50%)"
+                color="gray.500"
+                fontSize="xl"
+              />
+            </Box>
           </DrawerHeader>
-          <DrawerBody>
+          <DrawerBody
+            overflowY="auto"
+            sx={{
+              "::-webkit-scrollbar": {
+                width: "6px",
+                borderRadius: "20px",
+              },
+              "::-webkit-scrollbar-track": {
+                background: "transparent",
+              },
+              "::-webkit-scrollbar-thumb": {
+                background: "#888",
+                borderRadius: "0",
+              },
+              "::-webkit-scrollbar-thumb:hover": {
+                background: "#555",
+              },
+            }}
+          >
             <VStack spacing={4} align="stretch">
-              <Box position="relative">
-                <Input
-                  placeholder="What are you looking for?"
-                  size="lg"
-                  mb={4}
-                  variant="outline"
-                  pl="10"
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <Icon
-                  as={SearchIcon}
-                  position="absolute"
-                  top="40%"
-                  left="3"
-                  transform="translateY(-50%)"
-                  color="gray.500"
-                  fontSize="xl"
-                />
+              <Box>
                 {searchTerm && (
-                  <Text fontSize="2xl" fontWeight="800">
-                    Search Results
-                  </Text>
+                  <Box>
+                    {isLoadingSearch ? (
+                      <Fetch201 />
+                    ) : combinedResults.length === 0 ? (
+                      <Text
+                        fontSize="xl"
+                        textAlign="center"
+                        justifyContent="center"
+                        color="red"
+                      >
+                        No results found. Try again...
+                      </Text> // No results found
+                    ) : (
+                      combinedResults.map((result) => (
+                        <Box key={result.id} mb={6}>
+                          {/* Loop through variants */}
+                          {result.variants.map((variant, index) => (
+                            <Box
+                              key={variant._id}
+                              p={4}
+                              mb={4}
+                              borderWidth="1px"
+                              borderRadius="lg"
+                              boxShadow="lg"
+                              transition="0.2s ease"
+                              _hover={{ shadow: "xl", borderColor: "blue.300" }}
+                              cursor="pointer"
+                              onClick={() =>
+                                handleView(result._id, result.categoryName)
+                              }
+                            >
+                              {/* Flex container for Model/Color on the left and View Details on the right */}
+                              <Flex justify="space-between" align="center">
+                                <Box>
+                                  <Text fontSize="md" fontWeight="600">
+                                    {result.model || result.name} -{" "}
+                                    {variant.color}
+                                  </Text>
+                                  <Text fontSize="md" color="gray.600">
+                                    Storage: {variant.storage}
+                                  </Text>
+                                </Box>
+
+                                {/* View Details Button */}
+                                <Box textAlign="right">
+                                  <Flex>
+                                    <Text
+                                      as="span"
+                                      color="blue.500"
+                                      fontWeight="bold"
+                                      mr={1}
+                                      cursor="pointer"
+                                    >
+                                      View in Details
+                                    </Text>
+                                    <Text as="span" color="blue.500">
+                                      {/* Diagonal arrow icon */}
+                                      <svg
+                                        width="16"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path
+                                          d="M17 7L7 17"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        />
+                                        <path
+                                          d="M7 7H17V17"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        />
+                                      </svg>
+                                    </Text>
+                                  </Flex>
+                                </Box>
+                              </Flex>
+                            </Box>
+                          ))}
+                        </Box>
+                      ))
+                    )}
+                  </Box>
                 )}
               </Box>
 

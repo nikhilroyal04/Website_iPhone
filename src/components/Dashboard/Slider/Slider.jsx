@@ -92,7 +92,7 @@ const ImageSlider = () => {
   const images = [
     "https://www.androidauthority.com/wp-content/uploads/2020/04/Motorola-Edge-landscape-in-hand.jpg",
     "https://static.toiimg.com/thumb/resizemode-4,msid-68089205,width-800,height-450,imgv-75/68089205.jpg",
-    "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzNjUyOXwwfDF8c2VhcmNofDF8fG1vdW50YWlufGVufDB8fHx8MTYyNTI4NDg3Nw&ixlib=rb-1.2.1&q=80&w=1080",
+    // "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzNjUyOXwwfDF8c2VhcmNofDF8fG1vdW50YWlufGVufDB8fHx8MTYyNTI4NDg3Nw&ixlib=rb-1.2.1&q=80&w=1080",
     "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzNjUyOXwwfDF8c2VhcmNofDR8fGJlYWNofGVufDB8fHx8MTYyNTI4NDg4MQ&ixlib=rb-1.2.1&q=80&w=1080",
   ];
 
@@ -100,16 +100,17 @@ const ImageSlider = () => {
     <Box
       maxW="80vw"
       maxH="80vh"
+      h="auto"
+      w="100%"
       mx="auto"
       mt={24}
-      mb={20}
-      // overflow="hidden"
+      mb={10}
       position="relative"
     >
       <Slider {...settings}>
         {images.map((image, index) => (
           <Flex key={index} justify="center">
-            <Image src={image} alt={`Slide ${index + 1}`} w="100%" h="77vh" />
+            <Image src={image} alt={`Slide ${index + 1}`} w="100%" h="auto" maxH="77vh" />
           </Flex>
         ))}
       </Slider>

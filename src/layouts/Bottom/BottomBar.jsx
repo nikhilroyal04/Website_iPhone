@@ -14,7 +14,7 @@ import { AiOutlineUser } from "react-icons/ai";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FaUser } from "react-icons/fa";
 import { LuArrowUpDown } from "react-icons/lu";
-import { CiFilter } from "react-icons/ci";
+import { CiFilter, CiShop } from "react-icons/ci";
 import SortDrawer from "../../components/Products/Filters/SortDrawer";
 import FilterDrawer from "../../components/Products/Filters/FilterDrawer";
 
@@ -140,7 +140,7 @@ const BottomBar = () => {
             >
               <VStack spacing={1} align="center">
                 <Icon
-                  as={BsCart}
+                  as={CiShop}
                   boxSize={6}
                   color={activeButton === "shop" ? "blue.600" : "black"}
                 />
