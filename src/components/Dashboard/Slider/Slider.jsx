@@ -20,6 +20,7 @@ const PrevButton = ({ onClick }) => {
       size="lg"
       variant="outline"
       colorScheme="blue"
+      _hover={{ bg: "none" }}
     />
   );
 };
@@ -39,6 +40,7 @@ const NextButton = ({ onClick }) => {
       size="lg"
       variant="outline"
       colorScheme="blue"
+      _hover={{ bg: "none" }}
     />
   );
 };
@@ -110,7 +112,13 @@ const ImageSlider = () => {
       <Slider {...settings}>
         {images.map((image, index) => (
           <Flex key={index} justify="center">
-            <Image src={image} alt={`Slide ${index + 1}`} w="100%" h="auto" maxH="77vh" />
+            <Image
+              src={image}
+              alt={`Slide ${index + 1}`}
+              w="100%"
+              h="auto"
+              maxH="77vh"
+            />
           </Flex>
         ))}
       </Slider>

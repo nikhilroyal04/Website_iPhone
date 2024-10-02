@@ -16,6 +16,8 @@ import {
   Button,
   Image,
   Flex,
+  InputGroup,
+  InputLeftElement,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
@@ -123,24 +125,19 @@ const SearchDrawer = ({ isOpen, onClose }) => {
               Search
             </Text>
             <Box>
-              {" "}
-              <Input
-                placeholder="What are you looking for?"
-                size="lg"
-                mb={4}
-                variant="outline"
-                pl="10"
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <Icon
-                as={SearchIcon}
-                position="absolute"
-                top={{ base: "16%", sm: "17%" }} // 'base' is for small screens, 'md' for medium and larger screens
-                left="9"
-                transform="translateY(-50%)"
-                color="gray.500"
-                fontSize="xl"
-              />
+              <InputGroup mb={4}>
+                <InputLeftElement>
+                  <Icon as={SearchIcon} color="gray.500" fontSize="xl" mt={2} />
+                </InputLeftElement>
+                <Input
+                  placeholder="What are you looking for?"
+                  size="lg"
+                  variant="outline"
+                  pl="10"
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  autoFocus
+                />
+              </InputGroup>
             </Box>
           </DrawerHeader>
           <DrawerBody
@@ -306,6 +303,11 @@ const SearchDrawer = ({ isOpen, onClose }) => {
                               color="white"
                               bg="black"
                               _hover={{ bg: "gray.800" }}
+                              maxW="100%"
+                              size="xs"
+                              fontSize="xs"
+                              px={4}
+                              py={4}
                             >
                               View More {category.name}
                             </Button>
