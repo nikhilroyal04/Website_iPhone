@@ -45,7 +45,7 @@ export const {
 
 // Asynchronous thunk to fetch Android data
 export const fetchAndroidData =
-  (page = 1) =>
+  (page = 1, searchTerm = "") =>
   async (dispatch) => {
     dispatch(setAndroidLoading());
     try {
@@ -55,6 +55,7 @@ export const fetchAndroidData =
           params: {
             page,
             limit: 20,
+            model: searchTerm,
           },
         }
       );

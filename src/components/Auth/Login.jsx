@@ -59,9 +59,9 @@ export default function AuthModal({ isOpen, onClose, onOpen }) {
         onClose();
       } else {
         toast({
-          title: "Unexpected Response",
-          description: "Login successful, but received unexpected data.",
-          status: "warning",
+          title: "Invalid Credentials",
+          description: "Login failed, please check email and password.",
+          status: "error",
           duration: 5000,
           isClosable: true,
         });

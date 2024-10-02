@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Flex,
@@ -21,17 +21,53 @@ import {
 } from "../../app/Slices/cartSlice";
 import { selectUser } from "../../app/Slices/authSlice";
 
+// Helper function to retrieve anonymous cart items from localStorage
+const getAnonymousCart = () => {
+  const storedCart = localStorage.getItem("anonymousCart");
+  return storedCart ? JSON.parse(storedCart) : { items: [] };
+};
+
 const Header = () => {
   const cartItems = useSelector(selectcartData);
   const user = useSelector(selectUser);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [anonymousCartItems, setAnonymousCartItems] = useState([]);
+  const [items, setItems] = useState(0); // State to track the number of cart items
 
   const userId = user ? user._id : null;
 
   useEffect(() => {
-    dispatch(getCartItemsByUserId(userId));
-  }, [dispatch]);
+    if (userId) {
+      // Fetch cart items from backend if user is logged in
+      dispatch(getCartItemsByUserId(userId));
+    } else {
+      // Get anonymous cart items from localStorage if user is not logged in
+      const storedAnonymousCart = getAnonymousCart();
+      setAnonymousCartItems(storedAnonymousCart.items);
+    }
+  }, [dispatch, userId]);
+
+  useEffect(() => {
+    // Function to update the number of items
+    const updateItems = () => {
+      if (userId) {
+        setItems(cartItems?.items?.length || 0);
+      } else {
+        const storedAnonymousCart = getAnonymousCart();
+        setItems(storedAnonymousCart.items.length || 0);
+      }
+    };
+
+    // Update items immediately on component mount
+    updateItems();
+
+    // Set interval to update items every second
+    const intervalId = setInterval(updateItems, 100);
+
+    // Clear interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [cartItems, userId]);
 
   const {
     isOpen: isSearchDrawerOpen,
@@ -44,8 +80,6 @@ const Header = () => {
   const handleClick = () => {
     navigate("/");
   };
-
-  const items = cartItems?.items?.length || "";
 
   return (
     <>

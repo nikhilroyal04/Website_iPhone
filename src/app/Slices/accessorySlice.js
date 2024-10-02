@@ -45,7 +45,7 @@ export const {
 
 // Asynchronous thunk to fetch accessory data
 export const fetchAccessoryData =
-  (page = 1) =>
+  (page = 1, searchTerm = "") =>
   async (dispatch) => {
     dispatch(setAccessoryLoading());
     try {
@@ -56,6 +56,7 @@ export const fetchAccessoryData =
           params: {
             page,
             limit: 20,
+            name: searchTerm,
           },
         }
       );

@@ -45,7 +45,7 @@ export const {
 
 // Asynchronous thunk to fetch iPhone data
 export const fetchiPhoneData =
-  (page = 1) =>
+  (page = 1, searchTerm = "") =>
   async (dispatch) => {
     dispatch(setiPhoneLoading());
     try {
@@ -55,6 +55,7 @@ export const fetchiPhoneData =
           params: {
             page,
             limit: 20,
+            model: searchTerm,
           },
         }
       );

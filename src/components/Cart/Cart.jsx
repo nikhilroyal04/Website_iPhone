@@ -29,8 +29,20 @@ import Loader from "../NotFound/Loader";
 import Error502 from "../NotFound/Error502";
 import Dummy from "../../assets/images/Dummy.jpg";
 import CouponModal from "./CouponModal";
+import { useNavigate } from "react-router-dom";
+
+// Helper functions for handling localStorage cart
+const getAnonymousCart = () => {
+  const storedCart = localStorage.getItem("anonymousCart");
+  return storedCart ? JSON.parse(storedCart) : { items: [] };
+};
+
+const setAnonymousCart = (cartData) => {
+  localStorage.setItem("anonymousCart", JSON.stringify(cartData));
+};
 
 const Cart = () => {
+  const navigate = useNavigate();
   const toast = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
 
@@ -44,14 +56,20 @@ const Cart = () => {
   const [totalAmount, setTotalAmount] = useState(0);
   const [totalSavings, setTotalSavings] = useState(0);
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [anonymousCart, setAnonymousCartState] = useState(getAnonymousCart());
 
   // Retrieve user information from cookies
   const user = Cookies.get("user");
   const userId = user ? JSON.parse(user)._id : null;
 
+  // Fetch cart based on user status (logged in or anonymous)
   useEffect(() => {
     if (userId) {
       dispatch(getCartItemsByUserId(userId));
+    } else {
+      // Handle anonymous user cart
+      const storedAnonymousCart = getAnonymousCart();
+      setAnonymousCartState(storedAnonymousCart);
     }
   }, [dispatch, userId]);
 
@@ -81,37 +99,55 @@ const Cart = () => {
     };
   };
 
+  console.log(anonymousCart.items);
+
   useEffect(() => {
-    const cartItems = cartData.items || [];
+    const cartItems = userId ? cartData.items : anonymousCart.items;
     const { totalAmount, totalSavings, discountAmount } =
       calculateTotal(cartItems);
     setTotalAmount(totalAmount);
     setTotalSavings(totalSavings);
     setDiscountAmount(discountAmount);
-  }, [cartData.items, appliedCoupon]);
+  }, [cartData.items, anonymousCart.items, appliedCoupon, userId]);
 
   if (cartLoading) {
     return <Loader />;
   }
 
-  if (!userId) {
+  // if (cartError) {
+  //   return <Error502 />;
+  // }
+
+  const cartItems = userId ? cartData.items : anonymousCart.items || [];
+
+  if (cartItems.length === 0) {
     return (
-      <Box p={5} mt={24} width="100vw" mb={10}>
+      <Box
+        p={5}
+        mt={24}
+        width="100%"
+        mb={10}
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+      >
         <Text fontSize="2xl" fontWeight="bold" mb={4} textAlign="center">
-          Please log in to view your cart.
+          Your cart is empty.
         </Text>
+        <Button
+          alignItems="center"
+          justifyContent="center"
+          onClick={() => navigate("/categories")}
+        >
+          Go to Shop
+        </Button>
       </Box>
     );
   }
 
-  if (cartError) {
-    return <Error502 />;
-  }
-
-  const cartItems = cartData.items || [];
-
   const originalTotal = parseFloat(
-    cartData.items
+    cartItems
       .reduce((acc, item) => {
         const price = parseFloat(item.originalPrice);
         return acc + (isNaN(price) ? 0 : price);
@@ -251,7 +287,18 @@ const Cart = () => {
   );
 
   const handleDelete = (userId, productId, variantId) => {
-    dispatch(deleteCartItem({ userId, productId, variantId }));
+    if (userId) {
+      dispatch(deleteCartItem({ userId, productId, variantId }));
+    } else {
+      // Handle removing the item from the anonymous cart
+      const updatedCart = anonymousCart.items.filter(
+        (item) =>
+          !(item.productId === productId && item.variantId === variantId)
+      );
+      const newCart = { ...anonymousCart, items: updatedCart };
+      setAnonymousCartState(newCart); // Update local state
+      setAnonymousCart(newCart);
+    }
   };
 
   return (
