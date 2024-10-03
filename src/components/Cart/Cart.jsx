@@ -303,7 +303,7 @@ const Cart = () => {
 
   return (
     <>
-      <Box p={5} mt={16} maxW="80vw" mx="auto" mb={10}>
+      <Box p={5} mt={16} maxW="95vw" mx="auto" mb={10}>
         <Text fontSize="2xl" fontWeight="bold" mb={4}>
           Shopping Cart ({cartItems.length} Items)
         </Text>
@@ -388,6 +388,7 @@ const Cart = () => {
                         variant="outline"
                         colorScheme="red"
                         size="sm"
+                        display={{ base: "none", sm: "flex" }}
                         onClick={() =>
                           handleDelete(userId, item.productId, item.variantId)
                         }
@@ -395,6 +396,19 @@ const Cart = () => {
                         Remove
                       </Button>
                     </Flex>
+                    <Button
+                      variant="outline"
+                      colorScheme="red"
+                      size="sm"
+                      width="100%"
+                      mt={3}
+                      display={{ base: "flex", sm: "none" }}
+                      onClick={() =>
+                        handleDelete(userId, item.productId, item.variantId)
+                      }
+                    >
+                      Remove
+                    </Button>
                   </Box>
                 ))
               )}

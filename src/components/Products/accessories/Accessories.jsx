@@ -221,7 +221,7 @@ export default function Product() {
   };
 
   const handleItemClick = (id) => {
-    navigate(`/categories/Accessories/${id}`);
+    navigate(`/categories/accessories/${id}`);
   };
 
   return (
@@ -373,7 +373,7 @@ export default function Product() {
                 position="relative"
                 cursor="pointer"
                 role="group"
-                onClick={() => handleItemClick(variant._id)}
+                onClick={() => handleItemClick(variant.modelId)}
               >
                 {/* Wrapper for image and hover button */}
                 <Box position="relative" w="full">

@@ -61,9 +61,9 @@ const Routing = () => {
         <Route path="/bag" element={<Cart />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/categories/:name" element={<CategoryHandler />} />
-        <Route path="/categories/Android/:id" element={<ADView />} />
+        <Route path="/categories/android/:id" element={<ADView />} />
         <Route path="/categories/iPhone/:id" element={<IView />} />
-        <Route path="/categories/Accessories/:id" element={<AcView />} />
+        <Route path="/categories/accessories/:id" element={<AcView />} />
         <Route path="/account" element={<Account />} />
       </Route>
 
