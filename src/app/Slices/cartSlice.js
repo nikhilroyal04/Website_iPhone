@@ -74,6 +74,27 @@ export const deleteCartItem =
     }
   };
 
+// Action for updating a cart item
+export const updateCartItem =
+  ({ userId, productId, variantId, quantity }) =>
+  async (dispatch) => {
+    dispatch(setcartLoading()); // Start loading state.
+
+    try {
+      await axios.put(
+        `${
+          import.meta.env.VITE_BASE_URL
+        }cart/updateItemQuantity/${userId}/${productId}/${variantId}`,
+        { quantity }
+      );
+
+      // After successfully updating, fetch the updated cart items.
+      dispatch(getCartItemsByUserId(userId));
+    } catch (error) {
+      dispatch(setcartError(error.message));
+    }
+  };
+
 export const selectcartData = (state) => state.cart.data;
 export const selectcartLoading = (state) => state.cart.isLoading;
 export const selectcartError = (state) => state.cart.error;

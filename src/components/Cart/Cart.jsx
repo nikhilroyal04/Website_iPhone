@@ -22,6 +22,7 @@ import {
   selectcartLoading,
   getCartItemsByUserId,
   deleteCartItem,
+  updateCartItem,
 } from "../../app/Slices/cartSlice";
 import { useSelector, useDispatch } from "react-redux";
 import { ChevronRightIcon } from "@chakra-ui/icons";
@@ -157,10 +158,24 @@ const Cart = () => {
     const updatedItems = cartItems.map((item) =>
       item._id === itemId ? { ...item, quantity: parseInt(newQuantity) } : item
     );
-    const anonymousCart = {
-      items: updatedItems,
-    };
-    localStorage.setItem("anonymousCart", JSON.stringify(anonymousCart));
+
+    if (userId) {
+      // Dispatch updateItemCart for logged-in user
+      const itemToUpdate = updatedItems.find(item => item._id === itemId);
+      dispatch(updateCartItem({
+        userId,
+        productId: itemToUpdate.productId,
+        variantId: itemToUpdate.variantId,
+        quantity: parseInt(newQuantity),
+      }));
+    } else {
+      // Handle anonymous user
+      const anonymousCart = {
+        items: updatedItems,
+      };
+      setAnonymousCartState(anonymousCart);
+      setAnonymousCart(anonymousCart); // Update local storage
+    }
   };
 
   const handleApplyCoupon = (coupon) => {
