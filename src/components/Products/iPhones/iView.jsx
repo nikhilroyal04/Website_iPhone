@@ -12,6 +12,9 @@ import {
   Image,
   Button,
   HStack,
+  Divider,
+  Flex,
+  Select,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -23,15 +26,19 @@ import {
 import Loader from "../../NotFound/Loader";
 import Error502 from "../../NotFound/Error502";
 import Dummy from "../../../assets/images/Dummy.jpg";
+import { useAddToCart } from "../../../utils/cartUtils";
 
 export default function IView() {
+  const { addToCart } = useAddToCart();
+
   const { id } = useParams();
   const dispatch = useDispatch();
 
-  const [selectedVariant, setSelectedVariant] = useState(null); // State to track selected variant
-  const [mainImage, setMainImage] = useState(null); // State to track the main image
-  const [selectedColor, setSelectedColor] = useState(null); // State to track selected color
-  const [selectedStorage, setSelectedStorage] = useState(null); // State to track selected storage
+  const [selectedVariant, setSelectedVariant] = useState(null);
+  const [mainImage, setMainImage] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedStorage, setSelectedStorage] = useState(null);
+  const [quantity, setQuantity] = useState(1);
 
   const iPhoneData = useSelector(selectiPhoneById);
   const loading = useSelector(selectiPhoneLoading);
@@ -59,6 +66,7 @@ export default function IView() {
       (variant) => variant.color === color && variant.quantity > 0
     );
     setSelectedVariant(availableVariant);
+    setQuantity(1);
     setMainImage(iPhoneData.media[0] || Dummy); // Reset main image on color change
   };
 
@@ -73,6 +81,13 @@ export default function IView() {
 
   const handleImageChange = (image) => {
     setMainImage(image);
+  };
+
+  const handleQuantityChange = (value) => {
+    const selectedQuantity = parseInt(value);
+    if (selectedQuantity <= selectedVariant.quantity && selectedQuantity <= 5) {
+      setQuantity(selectedQuantity);
+    }
   };
 
   // Get unique colors and storage options for the selected color
@@ -90,7 +105,7 @@ export default function IView() {
     : [];
 
   return (
-    <Box p={8} mt={16}>
+    <Box p={8} mt={14}>
       {/* Breadcrumb Navigation */}
       <Breadcrumb separator=">">
         <BreadcrumbItem>
@@ -245,19 +260,71 @@ export default function IView() {
                 </>
               )}
 
+              <Flex mt={6}>
+                <Text fontWeight="bold" mr={2} fontSize="lg">
+                  Quantity:
+                </Text>
+                <Select
+                  size="sm"
+                  value={quantity}
+                  onChange={(e) => handleQuantityChange(e.target.value)}
+                  w="60px"
+                  ml={2}
+                  isDisabled={selectedVariant.quantity === 0}
+                >
+                  {[...Array(Math.min(5, selectedVariant.quantity)).keys()].map(
+                    (x) => (
+                      <option key={x + 1} value={x + 1}>
+                        {x + 1}
+                      </option>
+                    )
+                  )}
+                </Select>
+              </Flex>
+
               {/* Add to Cart & Buy Now Buttons */}
               <HStack spacing={4} mt={6} width="100%">
-                <Button colorScheme="teal" size="lg" width="100%">
-                  Add to Cart
-                </Button>
-                <Button colorScheme="yellow" size="lg" width="100%">
-                  Buy Now
-                </Button>
+                {selectedVariant?.quantity === 0 ? (
+                  <Text fontSize="lg" color="red.500" fontWeight="bold">
+                    Sold Out
+                  </Text>
+                ) : (
+                  <>
+                    <Button
+                      colorScheme="teal"
+                      size="lg"
+                      width="100%"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const cartItem = {
+                          productId: iPhoneData._id,
+                          variantId: selectedVariant._id,
+                          name: iPhoneData.model,
+                          color: selectedColor,
+                          storageOption: selectedStorage,
+                          price: selectedVariant.price,
+                          originalPrice: selectedVariant.originalPrice,
+                          priceOff: selectedVariant.priceOff,
+                          quantity: quantity,
+                          media: iPhoneData.media[0],
+                        };
+                        addToCart(cartItem);
+                      }}
+                    >
+                      Add to Cart
+                    </Button>
+                    <Button colorScheme="yellow" size="lg" width="100%">
+                      Buy Now
+                    </Button>
+                  </>
+                )}
               </HStack>
             </GridItem>
           </Grid>
         </Box>
       )}
+
+      <Divider mt={5} />
 
       {/* Other Device Details */}
       {!loading && !error && iPhoneData && (

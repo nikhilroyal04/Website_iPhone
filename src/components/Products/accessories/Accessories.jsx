@@ -363,85 +363,87 @@ export default function Product() {
             }}
             gap={6}
           >
-            {sortedData().map((variant, index) => (
-              <VStack
-                key={variant._id}
-                spacing={3}
-                align="start"
-                p={4}
-                borderRadius="md"
-                position="relative"
-                cursor="pointer"
-                role="group"
-                onClick={() => handleItemClick(variant.modelId)}
-              >
-                {/* Wrapper for image and hover button */}
-                <Box position="relative" w="full">
-                  <Image
-                    src={variant.media || Dummy} // Fallback image if not available
-                    alt={variant.model}
-                    boxSize="full"
-                    objectFit="cover"
-                    transition="all 0.3s ease"
-                    borderRadius="md"
-                  />
-                  {/* Add to Cart button, initially hidden */}
-                  <Button
-                    variant="none"
-                    position="absolute"
-                    bottom="4"
-                    left="50%"
-                    transform="translateX(-50%)"
-                    bg="#323232"
-                    color="white"
-                    borderRadius="10px"
-                    width="90%"
-                    opacity={0}
-                    transition="opacity 0.3s ease"
-                    _groupHover={{ opacity: 1 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const cartItem = {
-                        productId: variant.modelId,
-                        variantId: variant._id,
-                        name: variant.model,
-                        color: variant.color,
-                        storageOption: "N/A",
-                        price: variant.price,
-                        originalPrice: variant.originalPrice,
-                        priceOff: variant.priceOff,
-                        quantity: 1,
-                        media: variant.media ? variant.media.url : Dummy,
-                      };
-                      addToCart(cartItem);
-                    }}
-                  >
-                    Add to Cart
-                  </Button>
-                </Box>
-                <Text fontWeight="semibold">
-                  {variant.model}- {variant.color}
-                </Text>
-                <Text fontSize="lg" color="blue.600">
-                  ₹{variant.price}
-                  {variant.originalPrice && (
-                    <Text
-                      as="span"
-                      textDecoration="line-through"
-                      ml={2}
-                      color="gray"
+            {sortedData()
+              .filter((variant) => variant.status !== "soldout")
+              .map((variant, index) => (
+                <VStack
+                  key={variant._id}
+                  spacing={3}
+                  align="start"
+                  p={4}
+                  borderRadius="md"
+                  position="relative"
+                  cursor="pointer"
+                  role="group"
+                  onClick={() => handleItemClick(variant.modelId)}
+                >
+                  {/* Wrapper for image and hover button */}
+                  <Box position="relative" w="full">
+                    <Image
+                      src={variant.media || Dummy} // Fallback image if not available
+                      alt={variant.model}
+                      boxSize="full"
+                      objectFit="cover"
+                      transition="all 0.3s ease"
+                      borderRadius="md"
+                    />
+                    {/* Add to Cart button, initially hidden */}
+                    <Button
+                      variant="none"
+                      position="absolute"
+                      bottom="4"
+                      left="50%"
+                      transform="translateX(-50%)"
+                      bg="#323232"
+                      color="white"
+                      borderRadius="10px"
+                      width="90%"
+                      opacity={0}
+                      transition="opacity 0.3s ease"
+                      _groupHover={{ opacity: 1 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const cartItem = {
+                          productId: variant.modelId,
+                          variantId: variant._id,
+                          name: variant.model,
+                          color: variant.color,
+                          storageOption: "N/A",
+                          price: variant.price,
+                          originalPrice: variant.originalPrice,
+                          priceOff: variant.priceOff,
+                          quantity: 1,
+                          media: variant.media ? variant.media.url : Dummy,
+                        };
+                        addToCart(cartItem);
+                      }}
                     >
-                      ₹{variant.originalPrice || "N/A"}
-                    </Text>
-                  )}
-                  {variant.priceOff && (
-                    <Text as="span" color="red.500" ml={2}>
-                      ({variant.priceOff || "0%"} off)
-                    </Text>
-                  )}
-                </Text>
-              </VStack>
-            ))}
+                      Add to Cart
+                    </Button>
+                  </Box>
+                  <Text fontWeight="semibold">
+                    {variant.model}- {variant.color}
+                  </Text>
+                  <Text fontSize="lg" color="blue.600">
+                    ₹{variant.price}
+                    {variant.originalPrice && (
+                      <Text
+                        as="span"
+                        textDecoration="line-through"
+                        ml={2}
+                        color="gray"
+                      >
+                        ₹{variant.originalPrice || "N/A"}
+                      </Text>
+                    )}
+                    {variant.priceOff && (
+                      <Text as="span" color="red.500" ml={2}>
+                        ({variant.priceOff || "0%"} off)
+                      </Text>
+                    )}
+                  </Text>
+                </VStack>
+              ))}
           </Grid>
         </Box>
       </Box>

@@ -12,6 +12,9 @@ import {
   Image,
   Button,
   HStack,
+  Divider,
+  Flex,
+  Select,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -23,8 +26,10 @@ import {
 import Loader from "../../NotFound/Loader";
 import Error502 from "../../NotFound/Error502";
 import Dummy from "../../../assets/images/Dummy.jpg"; // Placeholder image
+import { useAddToCart } from "../../../utils/cartUtils";
 
 export default function AdView() {
+  const { addToCart } = useAddToCart();
   const { id } = useParams();
   const dispatch = useDispatch();
 
@@ -32,6 +37,7 @@ export default function AdView() {
   const [mainImage, setMainImage] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedStorage, setSelectedStorage] = useState(null);
+  const [quantity, setQuantity] = useState(1);
 
   const androidData = useSelector(selectAndroidById);
   const loading = useSelector(selectAndroidLoading);
@@ -62,6 +68,7 @@ export default function AdView() {
       (variant) => variant.color === color && variant.quantity > 0
     );
     setSelectedVariant(availableVariant);
+    setQuantity(1);
     setMainImage(androidData.media[0] || Dummy); // Reset main image on color change
   };
 
@@ -78,6 +85,13 @@ export default function AdView() {
     setMainImage(image);
   };
 
+  const handleQuantityChange = (value) => {
+    const selectedQuantity = parseInt(value);
+    if (selectedQuantity <= selectedVariant.quantity && selectedQuantity <= 5) {
+      setQuantity(selectedQuantity);
+    }
+  };
+
   const uniqueColors = Array.from(
     new Set(androidData?.variants.map((variant) => variant.color))
   );
@@ -92,7 +106,7 @@ export default function AdView() {
     : [];
 
   return (
-    <Box p={8} mt={16}>
+    <Box p={8} mt={14}>
       {/* Breadcrumb Navigation */}
       <Breadcrumb separator=">">
         <BreadcrumbItem>
@@ -245,20 +259,71 @@ export default function AdView() {
                   </HStack>
                 </>
               )}
+              <Flex mt={6}>
+                <Text fontWeight="bold" mr={2} fontSize="lg">
+                  Quantity:
+                </Text>
+                <Select
+                  size="sm"
+                  value={quantity}
+                  onChange={(e) => handleQuantityChange(e.target.value)}
+                  w="60px"
+                  ml={2}
+                  isDisabled={selectedVariant.quantity === 0}
+                >
+                  {[...Array(Math.min(5, selectedVariant.quantity)).keys()].map(
+                    (x) => (
+                      <option key={x + 1} value={x + 1}>
+                        {x + 1}
+                      </option>
+                    )
+                  )}
+                </Select>
+              </Flex>
 
               {/* Add to Cart & Buy Now Buttons */}
               <HStack spacing={4} mt={6} width="100%">
-                <Button colorScheme="teal" size="lg" width="100%">
-                  Add to Cart
-                </Button>
-                <Button colorScheme="yellow" size="lg" width="100%">
-                  Buy Now
-                </Button>
+                {selectedVariant?.quantity === 0 ? (
+                  <Text fontSize="lg" color="red.500" fontWeight="bold">
+                    Sold Out
+                  </Text>
+                ) : (
+                  <>
+                    <Button
+                      colorScheme="teal"
+                      size="lg"
+                      width="100%"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const cartItem = {
+                          productId: androidData._id,
+                          variantId: selectedVariant._id,
+                          name: androidData.model,
+                          color: selectedColor,
+                          storageOption: selectedStorage,
+                          price: selectedVariant.price,
+                          originalPrice: selectedVariant.originalPrice,
+                          priceOff: selectedVariant.priceOff,
+                          quantity: quantity,
+                          media: androidData.media[0],
+                        };
+                        addToCart(cartItem);
+                      }}
+                    >
+                      Add to Cart
+                    </Button>
+                    <Button colorScheme="yellow" size="lg" width="100%">
+                      Buy Now
+                    </Button>
+                  </>
+                )}
               </HStack>
             </GridItem>
           </Grid>
         </Box>
       )}
+
+      <Divider mt={5} />
 
       {/* Other Device Details */}
       {!loading && !error && androidData && (

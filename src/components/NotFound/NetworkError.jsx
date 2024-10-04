@@ -80,7 +80,7 @@ const NetworkError = () => {
             play
             style={{ width: "60%", maxWidth: "300px", height: "auto" }}
           />
-          <VStack mt={2}>
+          <VStack mt={2} textAlign="center">
             <Text fontSize="2xl" color="red.500" mb={5}>
               You are offline. Check your connection.
             </Text>

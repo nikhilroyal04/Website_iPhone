@@ -35,6 +35,14 @@ const BottomBar = () => {
   const isSpecialRoute =
     location.pathname === "/categories" || location.pathname === "/account";
 
+  // Regex to match routes like /categories/iPhone/{id}, /categories/Android/{id}, /categories/accessory/{id}
+  const hideBottomBarRoutesRegex = /^\/categories\/(iPhone|Android|accessroies)\/[a-zA-Z0-9]+$/;
+
+  // Conditionally hide BottomBar if on a detailed category view route
+  if (hideBottomBarRoutesRegex.test(location.pathname)) {
+    return null; // Do not render BottomBar
+  }
+
   return (
     <>
       <Box

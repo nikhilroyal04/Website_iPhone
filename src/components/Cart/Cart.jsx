@@ -99,8 +99,6 @@ const Cart = () => {
     };
   };
 
-  console.log(anonymousCart.items);
-
   useEffect(() => {
     const cartItems = userId ? cartData.items : anonymousCart.items;
     const { totalAmount, totalSavings, discountAmount } =
@@ -159,7 +157,10 @@ const Cart = () => {
     const updatedItems = cartItems.map((item) =>
       item._id === itemId ? { ...item, quantity: parseInt(newQuantity) } : item
     );
-    // dispatch(updateCart(updatedItems)); // Uncomment this if you implement an updateCart action
+    const anonymousCart = {
+      items: updatedItems,
+    };
+    localStorage.setItem("anonymousCart", JSON.stringify(anonymousCart));
   };
 
   const handleApplyCoupon = (coupon) => {
@@ -342,7 +343,7 @@ const Cart = () => {
                         />
                         <VStack align="start" spacing={1}>
                           <Text fontWeight="semibold" fontSize="lg">
-                            {item.name}
+                            {item.name} -{item.color}
                           </Text>
                           <HStack>
                             <Text as="s" color="gray.500">
@@ -356,16 +357,20 @@ const Cart = () => {
                             You saved ₹{item.originalPrice - item.price}
                           </Text>
                           <Flex>
-                            <Select
-                              size="sm"
-                              defaultValue={item.storageOption}
-                              w="100px"
-                            >
-                              <option value="64GB">64GB</option>
-                              <option value="128GB">128GB</option>
-                              <option value="256GB">256GB</option>
-                              <option value="512GB">512GB</option>
-                            </Select>
+                            {item.storageOption !== "N/A" && (
+                              <Select
+                                size="sm"
+                                defaultValue={item.storageOption}
+                                w="100px"
+                              >
+                                <option value="64GB">64GB</option>
+                                <option value="128GB">128GB</option>
+                                <option value="256GB">256GB</option>
+                                <option value="512GB">512GB</option>
+                                <option value="1TB">1TB</option>
+                              </Select>
+                            )}
+
                             <Select
                               size="sm"
                               value={item.quantity}
