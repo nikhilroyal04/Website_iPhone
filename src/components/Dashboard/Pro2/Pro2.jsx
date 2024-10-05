@@ -3,11 +3,11 @@ import { Box, Text, Grid, Image, VStack, Button, Flex } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import {
+  fetchAndroidData,
   selectAndroidData,
   selectAndroidError,
   selectAndroidLoading,
-  fetchAndroidData,
-} from "../../../app/Slices/androidSlice";
+} from "../../../app/Slices/productSlice";
 import NoData from "../../NotFound/NoData";
 import Error502 from "../../NotFound/Error502";
 import Loader from "../../NotFound/Loader";
@@ -34,7 +34,7 @@ const Pro2 = () => {
     return <Error502 />;
   }
 
-  if (androidLoading && androidData.length === 0) {
+  if (!androidLoading && androidData.length === 0) {
     return <NoData />;
   }
 
@@ -57,21 +57,17 @@ const Pro2 = () => {
         gap={6}
       >
         {androidData.map((android) => {
-          // Extract the first variant to render its details
-          const variant = android.variants[0];
-
           // Use the first image from media[] if available, otherwise use a placeholder image
           const imageUrl = android.media.length > 0 ? android.media[0] : Dummy;
 
           const cartItem = {
             productId: android._id,
-            variantId: variant._id,
             name: android.model,
-            color: variant.color,
-            storageOption: variant.storage,
-            price: variant.price,
-            originalPrice: variant.originalPrice,
-            priceOff: variant.priceOff,
+            color: android.color,
+            storageOption: android.storage,
+            price: android.price,
+            originalPrice: android.originalPrice,
+            priceOff: android.priceOff,
             quantity: 1,
             media: imageUrl,
           };
@@ -123,24 +119,26 @@ const Pro2 = () => {
                   Add to Cart
                 </Button>
               </Box>
-              <Text fontWeight="semibold">
-                {`${android.model} - ${variant.storage}, ${variant.color}`}
-              </Text>
+              <Text fontWeight="semibold">{`${android.model} - ${
+                android.storage
+              }, ${
+                android.color.length > 0 ? JSON.parse(android.color[0]) : "N/A"
+              }`}</Text>
               <Text fontSize="lg" color="blue.600">
-                ₹{variant.price}
-                {variant.originalPrice && (
+                ₹{android.price}
+                {android.originalPrice && (
                   <Text
                     as="span"
                     textDecoration="line-through"
                     ml={2}
                     color="gray"
                   >
-                    ₹{variant.originalPrice}
+                    ₹{android.originalPrice}
                   </Text>
                 )}
-                {variant.priceOff && (
+                {android.priceOff && (
                   <Text as="span" color="red.500" ml={2}>
-                    {variant.priceOff} off
+                    ({android.priceOff}% off)
                   </Text>
                 )}
               </Text>

@@ -33,17 +33,11 @@ import Error502 from "../../components/NotFound/Error502";
 import Loader from "../../components/NotFound/Loader";
 import Dummy from "../../assets/images/Dummy.jpg";
 import {
-  selectiPhoneData,
-  fetchiPhoneData,
-} from "../../app/Slices/iPhoneSlice";
-import {
-  selectAndroidData,
-  fetchAndroidData,
-} from "../../app/Slices/androidSlice";
-import {
-  selectAccessoryData,
-  fetchAccessoryData,
-} from "../../app/Slices/accessorySlice";
+  selectAllProductsData,
+  selectAllProductsLoading,
+  selectAllProductsError,
+  fetchAllProductsData,
+} from "../../app/Slices/productSlice";
 import Fetch201 from "../../components/NotFound/Fetch201";
 
 const SearchDrawer = ({ isOpen, onClose }) => {
@@ -52,38 +46,34 @@ const SearchDrawer = ({ isOpen, onClose }) => {
   const categoryData = useSelector(selectcategoryData);
   const categoryError = useSelector(selectcategoryError);
   const categoryLoading = useSelector(selectcategoryLoading);
-  const iPhoneData = useSelector(selectiPhoneData);
-  const androidData = useSelector(selectAndroidData);
-  const accessoryData = useSelector(selectAccessoryData);
+  const productData = useSelector(selectAllProductsData);
+  const productLoading = useSelector(selectAllProductsLoading);
+  const productError = useSelector(selectAllProductsError);
   const [searchTerm, setSearchTerm] = useState("");
-  const [combinedResults, setCombinedResults] = useState([]);
   const [isLoadingSearch, setIsLoadingSearch] = useState(false);
 
   // Adjust size based on breakpoint
   const drawerSize = useBreakpointValue({ base: "full", lg: "lg" });
 
   useEffect(() => {
+    dispatch(fetchAllProductsData());
     dispatch(fetchcategoryData());
   }, [dispatch]);
 
   useEffect(() => {
     if (searchTerm.length >= 4) {
       setIsLoadingSearch(true);
-      dispatch(fetchiPhoneData(1, searchTerm));
-      dispatch(fetchAndroidData(1, searchTerm));
-      dispatch(fetchAccessoryData(1, searchTerm));
+      dispatch(fetchAllProductsData(1, searchTerm));
     }
   }, [searchTerm, dispatch]);
 
   useEffect(() => {
-    // Combine the data whenever iPhone, Android, or Accessory data changes
-    const combinedData = [...iPhoneData, ...androidData, ...accessoryData];
-    setCombinedResults(combinedData);
     setIsLoadingSearch(false);
-  }, [iPhoneData, androidData, accessoryData]);
+  }, [productData]);
 
   const handleClick = (category) => {
     navigate(`/categories/${category}`);
+    onClose();
   };
 
   if (categoryLoading) {
@@ -165,7 +155,7 @@ const SearchDrawer = ({ isOpen, onClose }) => {
                   <Box>
                     {isLoadingSearch ? (
                       <Fetch201 />
-                    ) : combinedResults.length === 0 ? (
+                    ) : productData.length === 0 ? (
                       <Text
                         fontSize="xl"
                         textAlign="center"
@@ -175,78 +165,76 @@ const SearchDrawer = ({ isOpen, onClose }) => {
                         No results found. Try again...
                       </Text> // No results found
                     ) : (
-                      combinedResults.map((result) => (
-                        <Box key={result.id} mb={6}>
+                      productData.map((result) => (
+                        <Box key={result._id} mb={6}>
                           {/* Loop through variants */}
-                          {result.variants.map((variant, index) => (
-                            <Box
-                              key={variant._id}
-                              p={4}
-                              mb={4}
-                              borderWidth="1px"
-                              borderRadius="lg"
-                              boxShadow="lg"
-                              transition="0.2s ease"
-                              _hover={{ shadow: "xl", borderColor: "blue.300" }}
-                              cursor="pointer"
-                              onClick={() =>
-                                handleView(result._id, result.categoryName)
-                              }
-                            >
-                              {/* Flex container for Model/Color on the left and View Details on the right */}
-                              <Flex justify="space-between" align="center">
-                                <Box>
-                                  <Text fontSize="md" fontWeight="600">
-                                    {result.model || result.name} -{" "}
-                                    {variant.color}
-                                  </Text>
-                                  <Text fontSize="md" color="gray.600">
-                                    Storage: {variant.storage}
-                                  </Text>
-                                </Box>
+                          <Box
+                            key={result._id}
+                            p={4}
+                            mb={4}
+                            borderWidth="1px"
+                            borderRadius="lg"
+                            boxShadow="lg"
+                            transition="0.2s ease"
+                            _hover={{ shadow: "xl", borderColor: "blue.300" }}
+                            cursor="pointer"
+                            onClick={() =>
+                              handleView(result._id, result.categoryName)
+                            }
+                          >
+                            {/* Flex container for Model/Color on the left and View Details on the right */}
+                            <Flex justify="space-between" align="center">
+                              <Box>
+                                <Text fontSize="md" fontWeight="600">
+                                  {result.model || result.name} -{" "}
+                                  {JSON.parse(result.color[0])}
+                                </Text>
+                                <Text fontSize="md" color="gray.600">
+                                  Storage: {result.storage}
+                                </Text>
+                              </Box>
 
-                                {/* View Details Button */}
-                                <Box textAlign="right">
-                                  <Flex>
-                                    <Text
-                                      as="span"
-                                      color="blue.500"
-                                      fontWeight="bold"
-                                      mr={1}
-                                      cursor="pointer"
+                              {/* View Details Button */}
+                              <Box textAlign="right">
+                                <Flex>
+                                  <Text
+                                    as="span"
+                                    color="blue.500"
+                                    fontWeight="bold"
+                                    mr={1}
+                                    cursor="pointer"
+                                  >
+                                    View in Details
+                                  </Text>
+                                  <Text as="span" color="blue.500">
+                                    {/* Diagonal arrow icon */}
+                                    <svg
+                                      width="16"
+                                      height="24"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      xmlns="http://www.w3.org/2000/svg"
                                     >
-                                      View in Details
-                                    </Text>
-                                    <Text as="span" color="blue.500">
-                                      {/* Diagonal arrow icon */}
-                                      <svg
-                                        width="16"
-                                        height="24"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                      >
-                                        <path
-                                          d="M17 7L7 17"
-                                          stroke="currentColor"
-                                          strokeWidth="2"
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                        />
-                                        <path
-                                          d="M7 7H17V17"
-                                          stroke="currentColor"
-                                          strokeWidth="2"
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                        />
-                                      </svg>
-                                    </Text>
-                                  </Flex>
-                                </Box>
-                              </Flex>
-                            </Box>
-                          ))}
+                                      <path
+                                        d="M17 7L7 17"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      />
+                                      <path
+                                        d="M7 7H17V17"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      />
+                                    </svg>
+                                  </Text>
+                                </Flex>
+                              </Box>
+                            </Flex>
+                          </Box>
                         </Box>
                       ))
                     )}

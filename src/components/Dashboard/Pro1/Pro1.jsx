@@ -2,25 +2,25 @@ import React, { useEffect } from "react";
 import { Box, Text, Grid, Image, VStack, Button, Flex } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  selectiPhoneData,
-  selectiPhoneError,
-  selectiPhoneLoading,
-  fetchiPhoneData,
-} from "../../../app/Slices/iPhoneSlice";
 import NoData from "../../NotFound/NoData";
 import Error502 from "../../NotFound/Error502";
 import Loader from "../../NotFound/Loader";
 import Dummy from "../../../assets/images/Dummy.jpg";
 import { useAddToCart } from "../../../utils/cartUtils";
+import {
+  fetchiPhoneData,
+  selectIPhoneData,
+  selectIPhoneError,
+  selectIPhoneLoading,
+} from "../../../app/Slices/productSlice";
 
 const Pro1 = () => {
   const { addToCart } = useAddToCart();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const iPhoneData = useSelector(selectiPhoneData);
-  const iPhoneError = useSelector(selectiPhoneError);
-  const iPhoneLoading = useSelector(selectiPhoneLoading);
+  const iPhoneData = useSelector(selectIPhoneData);
+  const iPhoneError = useSelector(selectIPhoneError);
+  const iPhoneLoading = useSelector(selectIPhoneLoading);
 
   useEffect(() => {
     dispatch(fetchiPhoneData());
@@ -34,16 +34,12 @@ const Pro1 = () => {
     return <Error502 />;
   }
 
-  if (iPhoneLoading && iPhoneData.length === 0) {
+  if (!iPhoneLoading && iPhoneData.length === 0) {
     return <NoData />;
   }
 
   const handleItemClick = (id) => {
     navigate(`/categories/iPhone/${id}`);
-  };
-
-  const handleAddToCartClick = () => {
-    navigate("#");
   };
 
   return (
@@ -61,21 +57,17 @@ const Pro1 = () => {
         gap={6}
       >
         {iPhoneData.map((iPhone) => {
-          // Render the first variant of each iPhone
-          const variant = iPhone.variants[0];
-
           // Use the first image from media[] if available, otherwise use placeholder
           const imageUrl = iPhone.media.length > 0 ? iPhone.media[0] : Dummy;
 
           const cartItem = {
             productId: iPhone._id,
-            variantId: variant._id,
             name: iPhone.model,
-            color: variant.color,
-            storageOption: variant.storage,
-            price: variant.price,
-            originalPrice: variant.originalPrice,
-            priceOff: variant.priceOff,
+            color: iPhone.color,
+            storageOption: iPhone.storage,
+            price: iPhone.price,
+            originalPrice: iPhone.originalPrice,
+            priceOff: iPhone.priceOff,
             quantity: 1,
             media: imageUrl,
           };
@@ -127,22 +119,26 @@ const Pro1 = () => {
                   Add to Cart
                 </Button>
               </Box>
-              <Text fontWeight="semibold">{`${iPhone.model} - ${variant.storage}, ${variant.color}`}</Text>
+              <Text fontWeight="semibold">{`${iPhone.model} - ${
+                iPhone.storage
+              }, ${
+                iPhone.color.length > 0 ? JSON.parse(iPhone.color[0]) : "N/A"
+              }`}</Text>
               <Text fontSize="lg" color="blue.600">
-                ₹{variant.price}
-                {variant.originalPrice && (
+                ₹{iPhone.price}
+                {iPhone.originalPrice && (
                   <Text
                     as="span"
                     textDecoration="line-through"
                     ml={2}
                     color="gray"
                   >
-                    ₹{variant.originalPrice}
+                    ₹{iPhone.originalPrice}
                   </Text>
                 )}
-                {variant.priceOff && (
+                {iPhone.priceOff && (
                   <Text as="span" color="red.500" ml={2}>
-                    {variant.priceOff} off
+                    ({iPhone.priceOff}% off)
                   </Text>
                 )}
               </Text>

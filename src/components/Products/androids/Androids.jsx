@@ -27,7 +27,8 @@ import {
   selectAndroidError,
   selectAndroidLoading,
   fetchAndroidData,
-} from "../../../app/Slices/androidSlice";
+  selectAndroidTotalPages,
+} from "../../../app/Slices/productSlice";
 import NoData from "../../NotFound/NoData";
 import Error502 from "../../NotFound/Error502";
 import Loader from "../../NotFound/Loader";
@@ -44,6 +45,8 @@ export default function Androids() {
   const androidError = useSelector(selectAndroidError);
   const androidLoading = useSelector(selectAndroidLoading);
   const sortOption = useSelector(selectSortOption);
+  const totalPages = useSelector(selectAndroidTotalPages);
+
   const [currentPage, setCurrentPage] = useState(1);
 
   const [priceRange, setPriceRange] = useState([10, 500000]);
@@ -67,17 +70,9 @@ export default function Androids() {
   }
 
   // Function to flatten and sort the variants
+  // Sort data based on the selected sort option
   const sortedData = () => {
-    const allVariants = androidData.flatMap((product) =>
-      product.variants.map((variant) => ({
-        ...variant,
-        model: product.model,
-        media: product.media[0],
-        modelId: product._id,
-      }))
-    );
-
-    let sortedVariants = [...allVariants];
+    let sortedVariants = [...androidData];
     if (sortOption === "price-asc") {
       sortedVariants.sort((a, b) => a.price - b.price);
     } else if (sortOption === "price-desc") {
@@ -87,14 +82,8 @@ export default function Androids() {
         (a, b) => new Date(b.createdOn) - new Date(a.createdOn)
       );
     }
-
     return sortedVariants;
   };
-
-  const totalVariantsCount = androidData.reduce(
-    (acc, product) => acc + product.variants.length,
-    0
-  );
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
@@ -251,7 +240,7 @@ export default function Androids() {
       >
         <Text fontSize="4xl" fontWeight="800">
           {name.charAt(0).toUpperCase() + name.slice(1)} Products (
-          {totalVariantsCount}) {/* Display total variants count */}
+          {androidData.length}) {/* Display total variants count */}
         </Text>
         <Flex display={{ base: "none", lg: "flex" }} alignItems="center">
           <Text fontSize="15px" fontWeight="800" mr={5} my="auto">
@@ -361,87 +350,86 @@ export default function Androids() {
             }}
             gap={6}
           >
-            {sortedData()
-              .filter((variant) => variant.status !== "soldout")
-              .map((variant, index) => (
-                <VStack
-                  key={`${variant.model}-${variant.storage}-${index}`} // Unique key for each variant
-                  spacing={3}
-                  align="start"
-                  p={4}
-                  borderRadius="md"
-                  position="relative"
-                  cursor="pointer"
-                  role="group"
-                  onClick={() => handleItemClick(variant.modelId)}
-                >
-                  {/* Wrapper for image and hover button */}
-                  <Box position="relative" w="full">
-                    <Image
-                      src={variant.media || Dummy} // Fallback image if not available
-                      alt={variant.model}
-                      boxSize="full"
-                      objectFit="cover"
-                      transition="all 0.3s ease"
-                      borderRadius="md"
-                    />
-                    {/* Add to Cart button, initially hidden */}
-                    <Button
-                      variant="none"
-                      position="absolute"
-                      bottom="4"
-                      left="50%"
-                      transform="translateX(-50%)"
-                      bg="#323232"
-                      color="white"
-                      borderRadius="10px"
-                      width="90%"
-                      opacity={0}
-                      transition="opacity 0.3s ease"
-                      _groupHover={{ opacity: 1 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const cartItem = {
-                          productId: variant.modelId,
-                          variantId: variant._id,
-                          name: variant.model,
-                          color: variant.color,
-                          storageOption: variant.storage,
-                          price: variant.price,
-                          originalPrice: variant.originalPrice,
-                          priceOff: variant.priceOff,
-                          quantity: 1,
-                          media: variant.media ? variant.media.url : Dummy,
-                        };
-                        addToCart(cartItem);
-                      }}
-                    >
-                      Add to Cart
-                    </Button>
-                  </Box>
-                  <Text fontWeight="semibold">
-                    {`${variant.model} - ${variant.storage}, ${variant.color}`}
+            {sortedData().map((android, index) => (
+              <VStack
+                key={`${android.model}-${android.storage}-${index}`} // Unique key for each variant
+                spacing={3}
+                align="start"
+                p={4}
+                borderRadius="md"
+                position="relative"
+                cursor="pointer"
+                role="group"
+                onClick={() => handleItemClick(android._id)}
+              >
+                {/* Wrapper for image and hover button */}
+                <Box position="relative" w="full">
+                  <Image
+                    src={android.media[0] || Dummy} // Fallback image if not available
+                    alt={android.model}
+                    boxSize="full"
+                    objectFit="cover"
+                    transition="all 0.3s ease"
+                    borderRadius="md"
+                  />
+                  {/* Add to Cart button, initially hidden */}
+                  <Button
+                    variant="none"
+                    position="absolute"
+                    bottom="4"
+                    left="50%"
+                    transform="translateX(-50%)"
+                    bg="#323232"
+                    color="white"
+                    borderRadius="10px"
+                    width="90%"
+                    opacity={0}
+                    transition="opacity 0.3s ease"
+                    _groupHover={{ opacity: 1 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const cartItem = {
+                        productId: android._id,
+                        name: android.model,
+                        color: android.color,
+                        storageOption: android.storage,
+                        price: android.price,
+                        originalPrice: android.originalPrice,
+                        priceOff: android.priceOff,
+                        quantity: 1,
+                        media: android.media[0] ? variant.media[0] : Dummy,
+                      };
+                      addToCart(cartItem);
+                    }}
+                  >
+                    Add to Cart
+                  </Button>
+                </Box>
+                <Text fontWeight="semibold">
+                  {`${android.model} - ${android.storage}, ${JSON.parse(
+                    android.color[0]
+                  )}`}
+                </Text>
+                <Text fontSize="lg" color="blue.600">
+                  ₹{android.price}
+                  <Text
+                    as="span"
+                    textDecoration="line-through"
+                    ml={2}
+                    color="gray"
+                  >
+                    ₹{android.originalPrice || "N/A"}
                   </Text>
-                  <Text fontSize="lg" color="blue.600">
-                    ₹{variant.price}
-                    <Text
-                      as="span"
-                      textDecoration="line-through"
-                      ml={2}
-                      color="gray"
-                    >
-                      ₹{variant.originalPrice || "N/A"}
-                    </Text>
-                    <Text as="span" color="red.500" ml={2}>
-                      ({variant.priceOff || "0%"} off)
-                    </Text>
+                  <Text as="span" color="red.500" ml={2}>
+                    ({android.priceOff || "0%"}% off)
                   </Text>
-                </VStack>
-              ))}
+                </Text>
+              </VStack>
+            ))}
           </Grid>
         </Box>
       </Box>
-      {totalVariantsCount >= 20 && (
+      {androidData.length >= 20 && (
         <HStack spacing={4} justifyContent="center" mt={6}>
           {renderPaginationButtons()}
         </HStack>

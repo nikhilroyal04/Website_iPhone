@@ -3,11 +3,11 @@ import { Box, Text, Grid, Image, VStack, Button, Flex } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import {
-  selectAccessoryData,
-  selectAccessoryError,
-  selectAccessoryLoading,
-  fetchAccessoryData,
-} from "../../../app/Slices/accessorySlice";
+  selectAccessoriesData,
+  selectAccessoriesError,
+  selectAccessoriesLoading,
+  fetchAccessoriesData,
+} from "../../../app/Slices/productSlice";
 import NoData from "../../NotFound/NoData";
 import Error502 from "../../NotFound/Error502";
 import Loader from "../../NotFound/Loader";
@@ -18,12 +18,12 @@ const Pro2 = () => {
   const { addToCart } = useAddToCart();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const AccessoryData = useSelector(selectAccessoryData);
-  const AccessoryError = useSelector(selectAccessoryError);
-  const AccessoryLoading = useSelector(selectAccessoryLoading);
+  const AccessoryData = useSelector(selectAccessoriesData);
+  const AccessoryError = useSelector(selectAccessoriesError);
+  const AccessoryLoading = useSelector(selectAccessoriesLoading);
 
   useEffect(() => {
-    dispatch(fetchAccessoryData());
+    dispatch(fetchAccessoriesData());
   }, [dispatch]);
 
   if (AccessoryLoading) {
@@ -57,22 +57,18 @@ const Pro2 = () => {
         gap={6}
       >
         {AccessoryData.map((Accessory) => {
-          // Extract the first variant to render its details
-          const variant = Accessory.variants[0];
-
           // Use the first image from media[] if available, otherwise use a placeholder image
           const imageUrl =
             Accessory.media.length > 0 ? Accessory.media[0] : Dummy;
 
           const cartItem = {
             productId: Accessory._id,
-            variantId: variant._id,
-            name: Accessory.name,
-            color: variant.color,
+            model: Accessory.model,
+            color: Accessory.color,
             storageOption: "N/A",
-            price: variant.price,
-            originalPrice: variant.originalPrice,
-            priceOff: variant.priceOff,
+            price: Accessory.price,
+            originalPrice: Accessory.originalPrice,
+            priceOff: Accessory.priceOff,
             quantity: 1,
             media: imageUrl,
           };
@@ -124,24 +120,26 @@ const Pro2 = () => {
                   Add to Cart
                 </Button>
               </Box>
-              <Text fontWeight="semibold">
-                {`${Accessory.name} - ${variant.color}`}
-              </Text>
+              <Text fontWeight="semibold">{`${Accessory.model}- ${
+                Accessory.color.length > 0
+                  ? JSON.parse(Accessory.color[0])
+                  : "N/A"
+              }`}</Text>
               <Text fontSize="lg" color="blue.600">
-                ₹{variant.price}
-                {variant.originalPrice && (
+                ₹{Accessory.price}
+                {Accessory.originalPrice && (
                   <Text
                     as="span"
                     textDecoration="line-through"
                     ml={2}
                     color="gray"
                   >
-                    ₹{variant.originalPrice}
+                    ₹{Accessory.originalPrice}
                   </Text>
                 )}
-                {variant.priceOff && (
+                {Accessory.priceOff && (
                   <Text as="span" color="red.500" ml={2}>
-                    {variant.priceOff} off
+                    ({Accessory.priceOff}% off)
                   </Text>
                 )}
               </Text>

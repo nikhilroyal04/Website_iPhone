@@ -24,12 +24,12 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import {
-  selectiPhoneData,
-  selectiPhoneError,
-  selectiPhoneLoading,
   fetchiPhoneData,
-  selectTotalPages,
-} from "../../../app/Slices/iPhoneSlice";
+  selectIPhoneData,
+  selectIPhoneError,
+  selectIPhoneLoading,
+  selectIPhoneTotalPages,
+} from "../../../app/Slices/productSlice";
 import { selectSortOption, setSortOption } from "../../../app/Slices/sortSlice";
 import NoData from "../../NotFound/NoData";
 import Error502 from "../../NotFound/Error502";
@@ -42,10 +42,10 @@ export default function iPhones() {
   const { name } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const iPhoneData = useSelector(selectiPhoneData);
-  const iPhoneError = useSelector(selectiPhoneError);
-  const iPhoneLoading = useSelector(selectiPhoneLoading);
-  const totalPages = useSelector(selectTotalPages);
+  const iPhoneData = useSelector(selectIPhoneData);
+  const iPhoneError = useSelector(selectIPhoneError);
+  const iPhoneLoading = useSelector(selectIPhoneLoading);
+  const totalPages = useSelector(selectIPhoneTotalPages);
   const sortOption = useSelector(selectSortOption);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -75,20 +75,9 @@ export default function iPhones() {
     setCurrentPage(1);
   };
 
-  // Function to flatten and sort the variants
+  // Sort data based on the selected sort option
   const sortedData = () => {
-    // Flattening all variants into a single array
-    const allVariants = iPhoneData.flatMap((product) =>
-      product.variants.map((variant) => ({
-        ...variant,
-        model: product.model,
-        media: product.media[0],
-        modelId: product._id,
-      }))
-    );
-
-    // Sort data based on the selected sort option
-    let sortedVariants = [...allVariants];
+    let sortedVariants = [...iPhoneData];
     if (sortOption === "price-asc") {
       sortedVariants.sort((a, b) => a.price - b.price);
     } else if (sortOption === "price-desc") {
@@ -98,14 +87,8 @@ export default function iPhones() {
         (a, b) => new Date(b.createdOn) - new Date(a.createdOn)
       );
     }
-
     return sortedVariants;
   };
-
-  const totalVariantsCount = iPhoneData.reduce(
-    (acc, product) => acc + product.variants.length,
-    0
-  );
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
@@ -266,7 +249,7 @@ export default function iPhones() {
       >
         <Text fontSize="4xl" fontWeight="800">
           {name.charAt(0).toUpperCase() + name.slice(1)} Products (
-          {totalVariantsCount})
+          {sortedData().length})
         </Text>
         <Flex display={{ base: "none", lg: "flex" }} alignItems="center">
           <Text fontSize="15px" fontWeight="800" mr={5} my="auto">
@@ -402,86 +385,85 @@ export default function iPhones() {
             }}
             gap={6}
           >
-            {sortedData()
-              .filter((variant) => variant.status !== "soldout") 
-              .map((variant, index) => (
-                <VStack
-                  key={`${variant.model}-${variant.storage}-${index}`}
-                  spacing={3}
-                  align="start"
-                  p={4}
-                  borderRadius="md"
-                  position="relative"
-                  cursor="pointer"
-                  role="group"
-                  onClick={() => handleItemClick(variant.modelId)}
-                >
-                  {/* Wrapper for image and hover button */}
-                  <Box position="relative" w="full">
-                    <Image
-                      src={variant.media || Dummy}
-                      alt={variant.model}
-                      boxSize="full"
-                      objectFit="cover"
-                      transition="all 0.3s ease"
-                      borderRadius="md"
-                    />
-                    {/* Add to Cart button, initially hidden */}
-                    <Button
-                      variant="none"
-                      position="absolute"
-                      bottom="4"
-                      left="50%"
-                      transform="translateX(-50%)"
-                      bg="#323232"
-                      color="white"
-                      borderRadius="10px"
-                      width="90%"
-                      opacity={0}
-                      transition="opacity 0.3s ease"
-                      _groupHover={{ opacity: 1 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const cartItem = {
-                          productId: variant.modelId,
-                          variantId: variant._id,
-                          name: variant.model,
-                          color: variant.color,
-                          storageOption: variant.storage,
-                          price: variant.price,
-                          originalPrice: variant.originalPrice,
-                          priceOff: variant.priceOff,
-                          quantity: 1,
-                          media: variant.media ? variant.media.url : Dummy,
-                        };
-                        addToCart(cartItem);
-                      }}
-                    >
-                      Add to Cart
-                    </Button>
-                  </Box>
-                  <Text fontWeight="semibold">{`${variant.model} - ${variant.storage}, ${variant.color}`}</Text>
-                  {/* Display price and details */}
-                  <Text fontSize="lg" color="blue.600">
-                    ₹{variant.price}
-                    <Text
-                      as="span"
-                      textDecoration="line-through"
-                      ml={2}
-                      color="gray"
-                    >
-                      ₹{variant.originalPrice || "N/A"}
-                    </Text>
-                    <Text as="span" color="red.500" ml={2}>
-                      ({variant.priceOff || "0%"} off)
-                    </Text>
+            {sortedData().map((iPhoneData, index) => (
+              <VStack
+                key={`${iPhoneData.model}-${iPhoneData.storage}-${index}`}
+                spacing={3}
+                align="start"
+                p={4}
+                borderRadius="md"
+                position="relative"
+                cursor="pointer"
+                role="group"
+                onClick={() => handleItemClick(iPhoneData._id)}
+              >
+                {/* Wrapper for image and hover button */}
+                <Box position="relative" w="full">
+                  <Image
+                    src={iPhoneData.media[0] || Dummy}
+                    alt={iPhoneData.model}
+                    boxSize="full"
+                    objectFit="cover"
+                    transition="all 0.3s ease"
+                    borderRadius="md"
+                  />
+                  {/* Add to Cart button, initially hidden */}
+                  <Button
+                    variant="none"
+                    position="absolute"
+                    bottom="4"
+                    left="50%"
+                    transform="translateX(-50%)"
+                    bg="#323232"
+                    color="white"
+                    borderRadius="10px"
+                    width="90%"
+                    opacity={0}
+                    transition="opacity 0.3s ease"
+                    _groupHover={{ opacity: 1 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const cartItem = {
+                        productId: iPhoneData._id,
+                        name: iPhoneData.model,
+                        color: iPhoneData.color,
+                        storageOption: iPhoneData.storage,
+                        price: iPhoneData.price,
+                        originalPrice: iPhoneData.originalPrice,
+                        priceOff: iPhoneData.priceOff,
+                        quantity: 1,
+                        media: iPhoneData.media[0]
+                          ? iPhoneData.media[0]
+                          : Dummy,
+                      };
+                      addToCart(cartItem);
+                    }}
+                  >
+                    Add to Cart
+                  </Button>
+                </Box>
+                <Text fontWeight="semibold">{`${iPhoneData.model} - ${iPhoneData.storage}, ${JSON.parse(iPhoneData.color[0])}`}</Text>
+                {/* Display price and details */}
+                <Text fontSize="lg" color="blue.600">
+                  ₹{iPhoneData.price}
+                  <Text
+                    as="span"
+                    textDecoration="line-through"
+                    ml={2}
+                    color="gray"
+                  >
+                    ₹{iPhoneData.originalPrice || "N/A"}
                   </Text>
-                </VStack>
-              ))}
+                  <Text as="span" color="red.500" ml={2}>
+                    ({iPhoneData.priceOff || "0%"}% off)
+                  </Text>
+                </Text>
+              </VStack>
+            ))}
           </Grid>
         </Box>
       </Box>
-      {totalVariantsCount >= 20 && (
+      {iPhoneData.length >= 20 && (
         <HStack spacing={4} justifyContent="center" mt={6}>
           {renderPaginationButtons()}
         </HStack>

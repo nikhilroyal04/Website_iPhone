@@ -23,12 +23,12 @@ import {
 } from "@chakra-ui/react";
 import { useSelector, useDispatch } from "react-redux";
 import {
-  selectAccessoryData,
-  selectAccessoryError,
-  selectAccessoryLoading,
-  fetchAccessoryData,
-  selectTotalPages,
-} from "../../../app/Slices/accessorySlice";
+  selectAccessoriesData,
+  selectAccessoriesError,
+  selectAccessoriesLoading,
+  fetchAccessoriesData,
+  selectAccessoriesTotalPages,
+} from "../../../app/Slices/productSlice";
 import { selectSortOption, setSortOption } from "../../../app/Slices/sortSlice";
 import NoData from "../../NotFound/NoData";
 import Error502 from "../../NotFound/Error502";
@@ -41,10 +41,10 @@ export default function Product() {
   const { name } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const accessoryData = useSelector(selectAccessoryData);
-  const accessoryError = useSelector(selectAccessoryError);
-  const accessoryLoading = useSelector(selectAccessoryLoading);
-  const totalPages = useSelector(selectTotalPages);
+  const accessoryData = useSelector(selectAccessoriesData);
+  const accessoryError = useSelector(selectAccessoriesError);
+  const accessoryLoading = useSelector(selectAccessoriesLoading);
+  const totalPages = useSelector(selectAccessoriesTotalPages);
   const sortOption = useSelector(selectSortOption);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -53,7 +53,7 @@ export default function Product() {
   const [ageOptions, setAgeOptions] = useState([]);
 
   useEffect(() => {
-    dispatch(fetchAccessoryData());
+    dispatch(fetchAccessoriesData());
   }, [dispatch]);
 
   if (accessoryLoading) {
@@ -82,18 +82,9 @@ export default function Product() {
     if (currentPage > 1) handlePageChange(currentPage - 1);
   };
 
-  // Function to sort the accessory data
+  // Sort data based on the selected sort option
   const sortedData = () => {
-    const allVariants = accessoryData.flatMap((product) =>
-      product.variants.map((variant) => ({
-        ...variant,
-        model: product.name,
-        media: product.media[0],
-        modelId: product._id,
-      }))
-    );
-
-    let sortedVariants = [...allVariants];
+    let sortedVariants = [...accessoryData];
     if (sortOption === "price-asc") {
       sortedVariants.sort((a, b) => a.price - b.price);
     } else if (sortOption === "price-desc") {
@@ -103,14 +94,8 @@ export default function Product() {
         (a, b) => new Date(b.createdOn) - new Date(a.createdOn)
       );
     }
-
     return sortedVariants;
   };
-
-  const totalVariantsCount = accessoryData.reduce(
-    (acc, product) => acc + product.variants.length,
-    0
-  );
 
   const renderPaginationButtons = () => {
     const pages = [];
@@ -363,87 +348,84 @@ export default function Product() {
             }}
             gap={6}
           >
-            {sortedData()
-              .filter((variant) => variant.status !== "soldout")
-              .map((variant, index) => (
-                <VStack
-                  key={variant._id}
-                  spacing={3}
-                  align="start"
-                  p={4}
-                  borderRadius="md"
-                  position="relative"
-                  cursor="pointer"
-                  role="group"
-                  onClick={() => handleItemClick(variant.modelId)}
-                >
-                  {/* Wrapper for image and hover button */}
-                  <Box position="relative" w="full">
-                    <Image
-                      src={variant.media || Dummy} // Fallback image if not available
-                      alt={variant.model}
-                      boxSize="full"
-                      objectFit="cover"
-                      transition="all 0.3s ease"
-                      borderRadius="md"
-                    />
-                    {/* Add to Cart button, initially hidden */}
-                    <Button
-                      variant="none"
-                      position="absolute"
-                      bottom="4"
-                      left="50%"
-                      transform="translateX(-50%)"
-                      bg="#323232"
-                      color="white"
-                      borderRadius="10px"
-                      width="90%"
-                      opacity={0}
-                      transition="opacity 0.3s ease"
-                      _groupHover={{ opacity: 1 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const cartItem = {
-                          productId: variant.modelId,
-                          variantId: variant._id,
-                          name: variant.model,
-                          color: variant.color,
-                          storageOption: "N/A",
-                          price: variant.price,
-                          originalPrice: variant.originalPrice,
-                          priceOff: variant.priceOff,
-                          quantity: 1,
-                          media: variant.media ? variant.media.url : Dummy,
-                        };
-                        addToCart(cartItem);
-                      }}
+            {sortedData().map((accessory, index) => (
+              <VStack
+                key={accessory._id}
+                spacing={3}
+                align="start"
+                p={4}
+                borderRadius="md"
+                position="relative"
+                cursor="pointer"
+                role="group"
+                onClick={() => handleItemClick(accessory._id)}
+              >
+                {/* Wrapper for image and hover button */}
+                <Box position="relative" w="full">
+                  <Image
+                    src={accessory.media[0] || Dummy} // Fallback image if not available
+                    alt={accessory.model}
+                    boxSize="full"
+                    objectFit="cover"
+                    transition="all 0.3s ease"
+                    borderRadius="md"
+                  />
+                  {/* Add to Cart button, initially hidden */}
+                  <Button
+                    variant="none"
+                    position="absolute"
+                    bottom="4"
+                    left="50%"
+                    transform="translateX(-50%)"
+                    bg="#323232"
+                    color="white"
+                    borderRadius="10px"
+                    width="90%"
+                    opacity={0}
+                    transition="opacity 0.3s ease"
+                    _groupHover={{ opacity: 1 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const cartItem = {
+                        productId: accessory._id,
+                        name: accessory.model,
+                        color: accessory.color[0],
+                        storageOption: "N/A",
+                        price: accessory.price,
+                        originalPrice: accessory.originalPrice,
+                        priceOff: accessory.priceOff,
+                        quantity: 1,
+                        media: accessory.media[0] ? accessory.media[0] : Dummy,
+                      };
+                      addToCart(cartItem);
+                    }}
+                  >
+                    Add to Cart
+                  </Button>
+                </Box>
+                <Text fontWeight="semibold">
+                  {accessory.model}- {JSON.parse(accessory.color[0])}
+                </Text>
+                <Text fontSize="lg" color="blue.600">
+                  ₹{accessory.price}
+                  {accessory.originalPrice && (
+                    <Text
+                      as="span"
+                      textDecoration="line-through"
+                      ml={2}
+                      color="gray"
                     >
-                      Add to Cart
-                    </Button>
-                  </Box>
-                  <Text fontWeight="semibold">
-                    {variant.model}- {variant.color}
-                  </Text>
-                  <Text fontSize="lg" color="blue.600">
-                    ₹{variant.price}
-                    {variant.originalPrice && (
-                      <Text
-                        as="span"
-                        textDecoration="line-through"
-                        ml={2}
-                        color="gray"
-                      >
-                        ₹{variant.originalPrice || "N/A"}
-                      </Text>
-                    )}
-                    {variant.priceOff && (
-                      <Text as="span" color="red.500" ml={2}>
-                        ({variant.priceOff || "0%"} off)
-                      </Text>
-                    )}
-                  </Text>
-                </VStack>
-              ))}
+                      ₹{accessory.originalPrice || "N/A"}
+                    </Text>
+                  )}
+                  {accessory.priceOff && (
+                    <Text as="span" color="red.500" ml={2}>
+                      ({accessory.priceOff || "0%"}% off)
+                    </Text>
+                  )}
+                </Text>
+              </VStack>
+            ))}
           </Grid>
         </Box>
       </Box>

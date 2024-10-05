@@ -18,57 +18,35 @@ import {
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  fetchAccessoryById,
-  selectAccessoryById,
-  selectAccessoryError,
-  selectAccessoryLoading,
-} from "../../../app/Slices/accessorySlice";
+  fetchProductById,
+  selectProductById,
+  selectAccessoriesError,
+  selectAccessoriesLoading,
+} from "../../../app/Slices/productSlice";
 import Loader from "../../NotFound/Loader";
 import Error502 from "../../NotFound/Error502";
 import Dummy from "../../../assets/images/Dummy.jpg";
 import { useAddToCart } from "../../../utils/cartUtils";
 
 export default function AcView() {
-  const { addToCart } = useAddToCart();
   const { id } = useParams();
+  const { addToCart } = useAddToCart();
   const dispatch = useDispatch();
 
-  const [selectedVariant, setSelectedVariant] = useState(null);
   const [mainImage, setMainImage] = useState(null);
-  const [selectedColor, setSelectedColor] = useState(null);
   const [quantity, setQuantity] = useState(1);
 
-  const accessoryData = useSelector(selectAccessoryById);
-  const loading = useSelector(selectAccessoryLoading);
-  const error = useSelector(selectAccessoryError);
+  const accessoryData = useSelector(selectProductById);
+  const loading = useSelector(selectAccessoriesLoading);
+  const error = useSelector(selectAccessoriesError);
 
   useEffect(() => {
-    dispatch(fetchAccessoryById(id));
+    dispatch(fetchProductById(id));
   }, [dispatch, id]);
 
   useEffect(() => {
-    if (
-      accessoryData &&
-      accessoryData.variants &&
-      accessoryData.variants.length > 0
-    ) {
-      const initialVariant = accessoryData.variants.find(
-        (variant) => variant.quantity > 0
-      );
-      setSelectedVariant(initialVariant);
-      setMainImage(accessoryData.media[0] || Dummy); // Set default main image
-    }
+    setMainImage(accessoryData?.media[0] || Dummy); // Set default main image
   }, [accessoryData]);
-
-  const handleColorChange = (color) => {
-    setSelectedColor(color);
-    const availableVariant = accessoryData.variants.find(
-      (variant) => variant.color === color && variant.quantity > 0
-    );
-    setSelectedVariant(availableVariant);
-    setQuantity(1);
-    setMainImage(accessoryData.media[0] || Dummy); // Reset main image on color change
-  };
 
   const handleImageChange = (image) => {
     setMainImage(image);
@@ -80,11 +58,6 @@ export default function AcView() {
       setQuantity(selectedQuantity);
     }
   };
-
-  // Get unique colors for the selected color
-  const uniqueColors = Array.from(
-    new Set(accessoryData?.variants.map((variant) => variant.color))
-  );
 
   return (
     <Box p={8} mt={14}>
@@ -104,7 +77,7 @@ export default function AcView() {
         {accessoryData && (
           <BreadcrumbItem isCurrentPage>
             <BreadcrumbLink href={`/categories/accessories`}>
-              {accessoryData.name}
+              {accessoryData.model}
             </BreadcrumbLink>
           </BreadcrumbItem>
         )}
@@ -115,7 +88,7 @@ export default function AcView() {
       {error && <Error502 />}
 
       {/* Main Content */}
-      {!loading && !error && accessoryData && selectedVariant && (
+      {!loading && !error && accessoryData && (
         <Box
           mt={2}
           mx="auto"
@@ -142,7 +115,7 @@ export default function AcView() {
             >
               <Image
                 src={mainImage} // Display selected main image
-                alt={accessoryData.name}
+                alt={accessoryData.model}
                 width="100%"
                 height="auto"
                 maxHeight="50vh"
@@ -177,23 +150,18 @@ export default function AcView() {
             >
               {/* Heading */}
               <Heading as="h2" size="lg" mb={2}>
-                {accessoryData.name}
+                {accessoryData.model}
               </Heading>
 
               {/* Price Section */}
               <Text fontSize="xl" color="green.500">
-                Price: <strong>₹{selectedVariant.price}</strong>
+                Price: <strong>₹{accessoryData.price}</strong>
               </Text>
               <Text as="s" fontSize="md" color="gray.500">
-                Original Price: ₹{selectedVariant.originalPrice}
+                Original Price: ₹{accessoryData.originalPrice}
               </Text>
               <Text fontSize="md" color="red.500">
-                {(
-                  ((selectedVariant.originalPrice - selectedVariant.price) /
-                    selectedVariant.originalPrice) *
-                  100
-                ).toFixed(0)}
-                % Off
+                {accessoryData.priceOff}% Off
               </Text>
 
               {/* Color Selection */}
@@ -209,12 +177,8 @@ export default function AcView() {
                   }}
                   gap={4}
                 >
-                  {uniqueColors.map((color) => (
-                    <Button
-                      key={color}
-                      variant={selectedColor === color ? "solid" : "outline"}
-                      onClick={() => handleColorChange(color)}
-                    >
+                  {JSON.parse(accessoryData.color).map((color) => (
+                    <Button key={color} variant="outline">
                       {color}
                     </Button>
                   ))}
@@ -231,9 +195,9 @@ export default function AcView() {
                   onChange={(e) => handleQuantityChange(e.target.value)}
                   w="60px"
                   ml={2}
-                  isDisabled={selectedVariant.quantity === 0}
+                  isDisabled={accessoryData.quantity === 0}
                 >
-                  {[...Array(Math.min(5, selectedVariant.quantity)).keys()].map(
+                  {[...Array(Math.min(5, accessoryData.quantity)).keys()].map(
                     (x) => (
                       <option key={x + 1} value={x + 1}>
                         {x + 1}
@@ -245,7 +209,7 @@ export default function AcView() {
 
               {/* Add to Cart & Buy Now Buttons */}
               <HStack spacing={4} mt={6} width="100%">
-                {selectedVariant?.quantity === 0 ? (
+                {accessoryData?.quantity === 0 ? (
                   <Text fontSize="lg" color="red.500" fontWeight="bold">
                     Sold Out
                   </Text>
@@ -259,13 +223,12 @@ export default function AcView() {
                         e.stopPropagation();
                         const cartItem = {
                           productId: accessoryData._id,
-                          variantId: selectedVariant._id,
-                          name: accessoryData.name,
-                          color: selectedColor,
+                          name: accessoryData.model,
+                          color: JSON.parse(accessoryData.color[0]),
                           storageOption: "N/A",
-                          price: selectedVariant.price,
-                          originalPrice: selectedVariant.originalPrice,
-                          priceOff: selectedVariant.priceOff,
+                          price: accessoryData.price,
+                          originalPrice: accessoryData.originalPrice,
+                          priceOff: accessoryData.priceOff,
                           quantity: quantity,
                           media: accessoryData.media[0],
                         };
