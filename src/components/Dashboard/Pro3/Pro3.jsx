@@ -93,6 +93,7 @@ const Pro2 = () => {
                   alt={`Product ${Accessory.name}`}
                   boxSize="full"
                   objectFit="cover"
+                  height="350px"
                   transition="all 0.3s ease"
                   _groupHover={{
                     borderRadius: "15px",

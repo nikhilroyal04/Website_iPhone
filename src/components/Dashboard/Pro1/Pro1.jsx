@@ -92,6 +92,7 @@ const Pro1 = () => {
                   alt={`Product ${iPhone.model}`}
                   boxSize="full"
                   objectFit="cover"
+                  height="350px"
                   transition="all 0.3s ease"
                   _groupHover={{
                     borderRadius: "15px",

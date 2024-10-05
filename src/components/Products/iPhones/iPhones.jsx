@@ -403,6 +403,7 @@ export default function iPhones() {
                     src={iPhoneData.media[0] || Dummy}
                     alt={iPhoneData.model}
                     boxSize="full"
+                    height="350px"
                     objectFit="cover"
                     transition="all 0.3s ease"
                     borderRadius="md"
@@ -442,7 +443,9 @@ export default function iPhones() {
                     Add to Cart
                   </Button>
                 </Box>
-                <Text fontWeight="semibold">{`${iPhoneData.model} - ${iPhoneData.storage}, ${JSON.parse(iPhoneData.color[0])}`}</Text>
+                <Text fontWeight="semibold">{`${iPhoneData.model} - ${
+                  iPhoneData.storage
+                }, ${JSON.parse(iPhoneData.color[0])}`}</Text>
                 {/* Display price and details */}
                 <Text fontSize="lg" color="blue.600">
                   ₹{iPhoneData.price}

@@ -366,6 +366,7 @@ export default function Product() {
                     src={accessory.media[0] || Dummy} // Fallback image if not available
                     alt={accessory.model}
                     boxSize="full"
+                    height="350px"
                     objectFit="cover"
                     transition="all 0.3s ease"
                     borderRadius="md"

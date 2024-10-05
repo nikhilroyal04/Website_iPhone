@@ -369,6 +369,7 @@ export default function Androids() {
                     alt={android.model}
                     boxSize="full"
                     objectFit="cover"
+                    height="350px"
                     transition="all 0.3s ease"
                     borderRadius="md"
                   />

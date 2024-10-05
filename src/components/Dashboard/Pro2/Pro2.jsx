@@ -91,6 +91,7 @@ const Pro2 = () => {
                   src={imageUrl || Dummy}
                   alt={`Product ${android.model}`}
                   boxSize="full"
+                  height="350px"
                   objectFit="cover"
                   transition="all 0.3s ease"
                   _groupHover={{
