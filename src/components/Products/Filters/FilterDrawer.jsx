@@ -19,68 +19,67 @@ import {
   RangeSliderFilledTrack,
   RangeSliderThumb,
 } from "@chakra-ui/react";
-import { useLocation } from "react-router-dom"; // Import useLocation from react-router-dom
+import { useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux"; // Import Redux hooks
+import {
+  saveFilters,
+  clearFilters,
+  selectSavedFilters,
+} from "../../../app/Slices/filterSlice"; // Adjust the import path accordingly
 
 const FilterDrawer = ({ isOpen, onClose }) => {
-  const [priceRange, setPriceRange] = React.useState([10, 500000]);
-  const [batteryHealthOptions, setBatteryHealthOptions] = React.useState([]);
-  const [storageOptions, setStorageOptions] = React.useState([]);
-  const [ageOptions, setAgeOptions] = React.useState([]);
-  const [typeOptions, setTypeOptions] = React.useState([]);
+  const dispatch = useDispatch();
+  
+  // Select filter state from the Redux store
+  const { priceRange, batteryHealth, storage, age, type } = useSelector(selectSavedFilters); // Ensure `type` is part of your state
 
-  const location = useLocation(); // Get the current route
+  const location = useLocation();
 
   const handleApply = () => {
+    // Dispatch the saveFilters action with current state
+    dispatch(saveFilters({ priceRange, batteryHealth, storage, age, type }));
     onClose();
   };
 
   const handleClear = () => {
-    setPriceRange([10, 500000]);
-    setBatteryHealthOptions([]);
-    setStorageOptions([]);
-    setAgeOptions([]);
-    setTypeOptions([]);
+    dispatch(clearFilters());
     onClose();
   };
 
+  const handlePriceRangeChange = (val) => {
+    dispatch(saveFilters({ priceRange: val, batteryHealth, storage, age, type }));
+  };
+
   const handleBatteryHealthChange = (value) => {
-    setBatteryHealthOptions((prev) => {
-      if (prev.includes(value)) {
-        return prev.filter((item) => item !== value);
-      } else {
-        return [...prev, value];
-      }
-    });
+    const newBatteryHealth = batteryHealth.includes(value)
+      ? batteryHealth.filter((item) => item !== value)
+      : [...batteryHealth, value];
+
+    dispatch(saveFilters({ priceRange, batteryHealth: newBatteryHealth, storage, age, type }));
   };
 
   const handleStorageChange = (value) => {
-    setStorageOptions((prev) => {
-      if (prev.includes(value)) {
-        return prev.filter((item) => item !== value);
-      } else {
-        return [...prev, value];
-      }
-    });
+    const newStorage = storage.includes(value)
+      ? storage.filter((item) => item !== value)
+      : [...storage, value];
+
+    dispatch(saveFilters({ priceRange, batteryHealth, storage: newStorage, age, type }));
   };
 
   const handleAgeChange = (value) => {
-    setAgeOptions((prev) => {
-      if (prev.includes(value)) {
-        return prev.filter((item) => item !== value);
-      } else {
-        return [...prev, value];
-      }
-    });
+    const newAge = age.includes(value)
+      ? age.filter((item) => item !== value)
+      : [...age, value];
+
+    dispatch(saveFilters({ priceRange, batteryHealth, storage, age: newAge, type }));
   };
 
   const handleTypeChange = (value) => {
-    setTypeOptions((prev) => {
-      if (prev.includes(value)) {
-        return prev.filter((item) => item !== value);
-      } else {
-        return [...prev, value];
-      }
-    });
+    const newType = type.includes(value)
+      ? type.filter((item) => item !== value)
+      : [...type, value];
+
+    dispatch(saveFilters({ priceRange, batteryHealth, storage, age, type: newType }));
   };
 
   return (
@@ -104,11 +103,11 @@ const FilterDrawer = ({ isOpen, onClose }) => {
                 </Text>
                 <RangeSlider
                   aria-label={["min", "max"]}
-                  defaultValue={priceRange}
+                  value={priceRange} // Use value instead of defaultValue
                   min={10}
                   max={500000}
                   step={100}
-                  onChange={(val) => setPriceRange(val)}
+                  onChange={(val) => handlePriceRangeChange(val)}
                 >
                   <RangeSliderTrack bg="gray.200">
                     <RangeSliderFilledTrack bg="blue.500" />
@@ -118,7 +117,7 @@ const FilterDrawer = ({ isOpen, onClose }) => {
                 </RangeSlider>
               </Box>
 
-              {/* Conditionally Render Battery Health Filter */}
+              {/* Battery Health Filter */}
               {location.pathname === "/categories/iPhone" && (
                 <Box width="100%">
                   <Text fontSize="20px" fontWeight="600" my={2}>
@@ -128,7 +127,7 @@ const FilterDrawer = ({ isOpen, onClose }) => {
                     {["80-below", "81-90", "90-95", "95-100"].map((health) => (
                       <Checkbox
                         key={health}
-                        isChecked={batteryHealthOptions.includes(health)}
+                        isChecked={batteryHealth.includes(health)}
                         onChange={() => handleBatteryHealthChange(health)}
                       >
                         {health === "80-below"
@@ -144,7 +143,7 @@ const FilterDrawer = ({ isOpen, onClose }) => {
                 </Box>
               )}
 
-              {/* Conditionally Render Storage Options (Hidden for /categories/accessory) */}
+              {/* Storage Options Filter */}
               {location.pathname !== "/categories/Accessories" && (
                 <Box width="100%">
                   <Text fontSize="20px" fontWeight="600" my={2}>
@@ -154,7 +153,7 @@ const FilterDrawer = ({ isOpen, onClose }) => {
                     {["64GB", "128GB", "256GB", "512GB", "1TB"].map((size) => (
                       <Checkbox
                         key={size}
-                        isChecked={storageOptions.includes(size)}
+                        isChecked={storage.includes(size)}
                         onChange={() => handleStorageChange(size)}
                       >
                         {size}
@@ -170,32 +169,32 @@ const FilterDrawer = ({ isOpen, onClose }) => {
                   Age
                 </Text>
                 <Stack direction="column" spacing={3}>
-                  {["1-3 months", "3-6 months", "6-9 months", "9 months - 1 year", "1 year above"].map((age) => (
+                  {["1-3 months", "3-6 months", "6-9 months", "9 months - 1 year", "1 year above"].map((ageValue) => (
                     <Checkbox
-                      key={age}
-                      isChecked={ageOptions.includes(age)}
-                      onChange={() => handleAgeChange(age)}
+                      key={ageValue}
+                      isChecked={age.includes(ageValue)}
+                      onChange={() => handleAgeChange(ageValue)}
                     >
-                      {age}
+                      {ageValue}
                     </Checkbox>
                   ))}
                 </Stack>
               </Box>
 
-              {/* Conditionally Render Type Filter */}
+              {/* Type Filter */}
               {location.pathname === "/categories/Accessories" && (
                 <Box width="100%">
                   <Text fontSize="20px" fontWeight="600" my={2}>
                     Type
                   </Text>
                   <Stack direction="column" spacing={3}>
-                    {["charger", "case", "earbuds", "screen protector", "other"].map((type) => (
+                    {["charger", "case", "earbuds", "screen protector", "other"].map((typeValue) => (
                       <Checkbox
-                        key={type}
-                        isChecked={typeOptions.includes(type)}
-                        onChange={() => handleTypeChange(type)}
+                        key={typeValue}
+                        isChecked={type.includes(typeValue)}
+                        onChange={() => handleTypeChange(typeValue)}
                       >
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                        {typeValue.charAt(0).toUpperCase() + typeValue.slice(1)}
                       </Checkbox>
                     ))}
                   </Stack>

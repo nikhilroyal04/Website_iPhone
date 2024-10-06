@@ -21,6 +21,7 @@ import ADView from "../components/Products/androids/adView";
 import IView from "../components/Products/iPhones/iView";
 import AcView from "../components/Products/accessories/acView";
 import NotFound from "../components/NotFound/NotFound";
+import Stepper from "../components/Cart/Checkout/Stepper";
 
 const Routing = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -59,6 +60,7 @@ const Routing = () => {
         <Route path="/refund-policy" element={<Refund />} />
         <Route path="/terms_and_condition" element={<TandD />} />
         <Route path="/bag" element={<Cart />} />
+        <Route path="/bag/checkout" element={<Stepper />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/categories/:name" element={<CategoryHandler />} />
         <Route path="/categories/android/:id" element={<ADView />} />

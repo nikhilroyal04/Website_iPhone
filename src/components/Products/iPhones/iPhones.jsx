@@ -36,6 +36,11 @@ import Error502 from "../../NotFound/Error502";
 import Loader from "../../NotFound/Loader";
 import Dummy from "../../../assets/images/Dummy.jpg";
 import { useAddToCart } from "../../../utils/cartUtils";
+import {
+  saveFilters,
+  clearFilters,
+  selectSavedFilters,
+} from "../../../app/Slices/filterSlice";
 
 export default function iPhones() {
   const { addToCart } = useAddToCart();
@@ -47,6 +52,7 @@ export default function iPhones() {
   const iPhoneLoading = useSelector(selectIPhoneLoading);
   const totalPages = useSelector(selectIPhoneTotalPages);
   const sortOption = useSelector(selectSortOption);
+  const savedFilters = useSelector(selectSavedFilters);
   const [currentPage, setCurrentPage] = useState(1);
 
   const [priceRange, setPriceRange] = useState([10, 500000]);
@@ -54,21 +60,73 @@ export default function iPhones() {
   const [storageOptions, setStorageOptions] = useState([]);
   const [ageOptions, setAgeOptions] = useState([]);
 
+  // Function to derive combined battery health range
+  const getCombinedBatteryHealthRange = (selectedRanges) => {
+    if (selectedRanges.length === 0) return "";
+
+    const min = Math.min(
+      ...selectedRanges.map((range) => parseInt(range.split("-")[0]))
+    );
+    const max = Math.max(
+      ...selectedRanges.map((range) => parseInt(range.split("-")[1]))
+    );
+
+    return `${min}-${max}`;
+  };
+
+  const getAgeValue = (selectedAges) => {
+    const ageValues = {
+      "1-3 months": 1,
+      "3-6 months": 6,
+      "6-9 months": 9,
+      "9-12 months": 12,
+      "1 year above": 60,
+    };
+
+    // Get the maximum age value from the selected options
+    let maxAgeValue = null;
+
+    selectedAges.forEach((age) => {
+      const value = ageValues[age];
+      if (value !== undefined) {
+        if (maxAgeValue === null || value > maxAgeValue) {
+          maxAgeValue = value;
+        }
+      }
+    });
+
+    return maxAgeValue;
+  };
+
   useEffect(() => {
-    dispatch(fetchiPhoneData());
-  }, [dispatch]);
+    // On component mount, set filters from saved filters
+    if (savedFilters) {
+      setPriceRange(savedFilters.priceRange || [10, 500000]);
+      setBatteryHealthOptions(savedFilters.batteryHealth || []);
+      setStorageOptions(savedFilters.storage || []);
+      setAgeOptions(savedFilters.age || []);
+    }
+  }, [savedFilters]);
 
-  if (iPhoneLoading) {
-    return <Loader />;
-  }
+  useEffect(() => {
+    const storageQuery = storageOptions.join(",");
+    const batteryHealthQuery =
+      getCombinedBatteryHealthRange(batteryHealthOptions);
+    const ageQuery = getAgeValue(ageOptions);
 
-  if (iPhoneError) {
-    return <Error502 />;
-  }
+    dispatch(
+      saveFilters({
+        priceRange,
+        batteryHealth: batteryHealthOptions,
+        storage: storageOptions,
+        age: ageOptions,
+      })
+    );
 
-  if (iPhoneData.length === 0) {
-    return <NoData />;
-  }
+    dispatch(
+      fetchiPhoneData(1, priceRange, storageQuery, batteryHealthQuery, ageQuery)
+    );
+  }, [dispatch, priceRange, storageOptions, batteryHealthOptions, ageOptions]);
 
   const handleSortChange = (event) => {
     dispatch(setSortOption(event.target.value));
@@ -188,12 +246,12 @@ export default function iPhones() {
     setAgeOptions([]);
   };
 
-  const handleBatteryHealthChange = (value) => {
+  const handleBatteryHealthChange = (range) => {
     setBatteryHealthOptions((prev) => {
-      if (prev.includes(value)) {
-        return prev.filter((item) => item !== value);
+      if (prev.includes(range)) {
+        return prev.filter((item) => item !== range);
       } else {
-        return [...prev, value];
+        return [...prev, range];
       }
     });
   };
@@ -309,28 +367,41 @@ export default function iPhones() {
 
           {/* Battery Health Filter (Only for iPhone category) */}
           {location.pathname === "/categories/iPhone" && (
-            <Box width="100%">
-              <Text fontSize="20px" fontWeight="600" my={2}>
-                Battery Health
-              </Text>
-              <Stack direction="column" spacing={3}>
-                {["80-below", "81-90", "90-95", "95-100"].map((health) => (
-                  <Checkbox
-                    key={health}
-                    isChecked={batteryHealthOptions.includes(health)}
-                    onChange={() => handleBatteryHealthChange(health)}
-                  >
-                    {health === "80-below"
-                      ? "80% and below"
-                      : health === "81-90"
-                      ? "81% to 90%"
-                      : health === "90-95"
-                      ? "90% to 95%"
-                      : "95% to 100%"}
-                  </Checkbox>
-                ))}
+            <VStack alignItems="stretch" spacing={2} mt={4}>
+              <Text fontWeight="bold">Battery Health</Text>
+              <Stack pl={2} spacing={2}>
+                <Checkbox
+                  isChecked={batteryHealthOptions.includes("95-100")}
+                  onChange={() => handleBatteryHealthChange("95-100")}
+                >
+                  95% - 100%
+                </Checkbox>
+                <Checkbox
+                  isChecked={batteryHealthOptions.includes("90-95")}
+                  onChange={() => handleBatteryHealthChange("90-95")}
+                >
+                  90% - 95%
+                </Checkbox>
+                <Checkbox
+                  isChecked={batteryHealthOptions.includes("85-90")}
+                  onChange={() => handleBatteryHealthChange("85-90")}
+                >
+                  85% - 90%
+                </Checkbox>
+                <Checkbox
+                  isChecked={batteryHealthOptions.includes("80-85")}
+                  onChange={() => handleBatteryHealthChange("80-85")}
+                >
+                  80% - 85%
+                </Checkbox>
+                <Checkbox
+                  isChecked={batteryHealthOptions.includes("0-80")}
+                  onChange={() => handleBatteryHealthChange("0-80")}
+                >
+                  Below 80%
+                </Checkbox>
               </Stack>
-            </Box>
+            </VStack>
           )}
 
           {/* Storage Options Filter */}
@@ -376,94 +447,103 @@ export default function iPhones() {
           </Box>
         </Box>
         <Box width={{ base: "100%", lg: "70%" }}>
-          <Grid
-            templateColumns={{
-              base: "repeat(1, 1fr)",
-              sm: "repeat(2, 1fr)",
-              md: "repeat(2, 1fr)",
-              lg: "repeat(3, 1fr)",
-            }}
-            gap={6}
-          >
-            {sortedData().map((iPhoneData, index) => (
-              <VStack
-                key={`${iPhoneData.model}-${iPhoneData.storage}-${index}`}
-                spacing={3}
-                align="start"
-                p={4}
-                borderRadius="md"
-                position="relative"
-                cursor="pointer"
-                role="group"
-                onClick={() => handleItemClick(iPhoneData._id)}
-              >
-                {/* Wrapper for image and hover button */}
-                <Box position="relative" w="full">
-                  <Image
-                    src={iPhoneData.media[0] || Dummy}
-                    alt={iPhoneData.model}
-                    boxSize="full"
-                    height="350px"
-                    objectFit="cover"
-                    transition="all 0.3s ease"
-                    borderRadius="md"
-                  />
-                  {/* Add to Cart button, initially hidden */}
-                  <Button
-                    variant="none"
-                    position="absolute"
-                    bottom="4"
-                    left="50%"
-                    transform="translateX(-50%)"
-                    bg="#323232"
-                    color="white"
-                    borderRadius="10px"
-                    width="90%"
-                    opacity={0}
-                    transition="opacity 0.3s ease"
-                    _groupHover={{ opacity: 1 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const cartItem = {
-                        productId: iPhoneData._id,
-                        name: iPhoneData.model,
-                        color: iPhoneData.color,
-                        storageOption: iPhoneData.storage,
-                        price: iPhoneData.price,
-                        originalPrice: iPhoneData.originalPrice,
-                        priceOff: iPhoneData.priceOff,
-                        quantity: 1,
-                        media: iPhoneData.media[0]
-                          ? iPhoneData.media[0]
-                          : Dummy,
-                      };
-                      addToCart(cartItem);
-                    }}
-                  >
-                    Add to Cart
-                  </Button>
-                </Box>
-                <Text fontWeight="semibold">{`${iPhoneData.model} - ${
-                  iPhoneData.storage
-                }, ${JSON.parse(iPhoneData.color[0])}`}</Text>
-                {/* Display price and details */}
-                <Text fontSize="lg" color="blue.600">
-                  ₹{iPhoneData.price}
-                  <Text
-                    as="span"
-                    textDecoration="line-through"
-                    ml={2}
-                    color="gray"
-                  >
-                    ₹{iPhoneData.originalPrice || "N/A"}
+          {/* Loading or Error State */}
+          {iPhoneLoading ? (
+            <Loader /> // Show loader only within the product grid
+          ) : iPhoneError ? (
+            <Error502 /> // Show error only within the product grid
+          ) : iPhoneData.length === 0 ? (
+            <NoData /> // Handle empty data case
+          ) : (
+            <Grid
+              templateColumns={{
+                base: "repeat(1, 1fr)",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(2, 1fr)",
+                lg: "repeat(3, 1fr)",
+              }}
+              gap={6}
+            >
+              {sortedData().map((iPhoneData, index) => (
+                <VStack
+                  key={`${iPhoneData.model}-${iPhoneData.storage}-${index}`}
+                  spacing={3}
+                  align="start"
+                  p={4}
+                  borderRadius="md"
+                  position="relative"
+                  cursor="pointer"
+                  role="group"
+                  onClick={() => handleItemClick(iPhoneData._id)}
+                >
+                  {/* Wrapper for image and hover button */}
+                  <Box position="relative" w="full">
+                    <Image
+                      src={iPhoneData.media[0] || Dummy}
+                      alt={iPhoneData.model}
+                      boxSize="full"
+                      height="350px"
+                      objectFit="cover"
+                      transition="all 0.3s ease"
+                      borderRadius="md"
+                    />
+                    {/* Add to Cart button, initially hidden */}
+                    <Button
+                      variant="none"
+                      position="absolute"
+                      bottom="4"
+                      left="50%"
+                      transform="translateX(-50%)"
+                      bg="#323232"
+                      color="white"
+                      borderRadius="10px"
+                      width="90%"
+                      opacity={0}
+                      transition="opacity 0.3s ease"
+                      _groupHover={{ opacity: 1 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const cartItem = {
+                          productId: iPhoneData._id,
+                          name: iPhoneData.model,
+                          color: iPhoneData.color[0],
+                          storageOption: iPhoneData.storage,
+                          price: iPhoneData.price,
+                          originalPrice: iPhoneData.originalPrice,
+                          priceOff: iPhoneData.priceOff,
+                          quantity: 1,
+                          media: iPhoneData.media[0]
+                            ? iPhoneData.media[0]
+                            : Dummy,
+                        };
+                        addToCart(cartItem);
+                      }}
+                    >
+                      Add to Cart
+                    </Button>
+                  </Box>
+                  <Text fontWeight="semibold">{`${iPhoneData.model} - ${
+                    iPhoneData.storage
+                  }, ${JSON.parse(iPhoneData.color[0])}`}</Text>
+                  {/* Display price and details */}
+                  <Text fontSize="lg" color="blue.600">
+                    ₹{iPhoneData.price}
+                    <Text
+                      as="span"
+                      textDecoration="line-through"
+                      ml={2}
+                      color="gray"
+                    >
+                      ₹{iPhoneData.originalPrice || "N/A"}
+                    </Text>
+                    <Text as="span" color="red.500" ml={2}>
+                      ({iPhoneData.priceOff || "0%"}% off)
+                    </Text>
                   </Text>
-                  <Text as="span" color="red.500" ml={2}>
-                    ({iPhoneData.priceOff || "0%"}% off)
-                  </Text>
-                </Text>
-              </VStack>
-            ))}
-          </Grid>
+                </VStack>
+              ))}
+            </Grid>
+          )}
         </Box>
       </Box>
       {iPhoneData.length >= 20 && (

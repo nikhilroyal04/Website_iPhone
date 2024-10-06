@@ -163,9 +163,17 @@ export const fetchAllProductsData =
 
 // Asynchronous thunk to fetch iPhone accessory data
 export const fetchiPhoneData =
-  (page = 1) =>
+  (
+    page = 1,
+    priceRange = [10, 500000],
+    storageQuery,
+    batteryHealthQuery,
+    ageQuery
+  ) =>
   async (dispatch) => {
     dispatch(setIPhoneLoading());
+    const priceQuery = `${priceRange[0]}-${priceRange[1]}`;
+
     try {
       const response = await axios.get(
         `${
@@ -175,6 +183,10 @@ export const fetchiPhoneData =
           params: {
             page,
             limit: 20,
+            price: priceQuery,
+            storage: storageQuery,
+            batteryHealth: batteryHealthQuery,
+            age: ageQuery,
           },
         }
       );
@@ -193,9 +205,16 @@ export const fetchiPhoneData =
 
 // Asynchronous thunk to fetch Android accessory data
 export const fetchAndroidData =
-  (page = 1) =>
+  (
+    page = 1,
+    priceRange = [10, 500000],
+    storageQuery,
+    ageQuery
+  ) =>
   async (dispatch) => {
     dispatch(setAndroidLoading());
+    const priceQuery = `${priceRange[0]}-${priceRange[1]}`;
+
     try {
       const response = await axios.get(
         `${
@@ -205,6 +224,9 @@ export const fetchAndroidData =
           params: {
             page,
             limit: 20,
+            price: priceQuery,
+            storage: storageQuery,
+            age: ageQuery,
           },
         }
       );
@@ -223,9 +245,11 @@ export const fetchAndroidData =
 
 // Asynchronous thunk to fetch accessories data
 export const fetchAccessoriesData =
-  (page = 1) =>
+  (page = 1, priceRange = [10, 500000], ageQuery, typeQuery) =>
   async (dispatch) => {
     dispatch(setAccessoriesLoading());
+    const priceQuery = `${priceRange[0]}-${priceRange[1]}`;
+
     try {
       const response = await axios.get(
         `${
@@ -235,6 +259,9 @@ export const fetchAccessoriesData =
           params: {
             page,
             limit: 20,
+            price: priceQuery,
+            age: ageQuery,
+            type: typeQuery,
           },
         }
       );

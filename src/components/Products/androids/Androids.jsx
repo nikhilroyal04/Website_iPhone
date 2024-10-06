@@ -35,6 +35,11 @@ import Loader from "../../NotFound/Loader";
 import Dummy from "../../../assets/images/Dummy.jpg";
 import { selectSortOption, setSortOption } from "../../../app/Slices/sortSlice";
 import { useAddToCart } from "../../../utils/cartUtils";
+import {
+  saveFilters,
+  clearFilters,
+  selectSavedFilters,
+} from "../../../app/Slices/filterSlice";
 
 export default function Androids() {
   const { addToCart } = useAddToCart();
@@ -45,6 +50,7 @@ export default function Androids() {
   const androidError = useSelector(selectAndroidError);
   const androidLoading = useSelector(selectAndroidLoading);
   const sortOption = useSelector(selectSortOption);
+  const savedFilters = useSelector(selectSavedFilters);
   const totalPages = useSelector(selectAndroidTotalPages);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -53,23 +59,54 @@ export default function Androids() {
   const [storageOptions, setStorageOptions] = useState([]);
   const [ageOptions, setAgeOptions] = useState([]);
 
+  const getAgeValue = (selectedAges) => {
+    const ageValues = {
+      "1-3 months": 1,
+      "3-6 months": 6,
+      "6-9 months": 9,
+      "9-12 months": 12,
+      "1 year above": 60,
+    };
+
+    // Get the maximum age value from the selected options
+    let maxAgeValue = null;
+
+    selectedAges.forEach((age) => {
+      const value = ageValues[age];
+      if (value !== undefined) {
+        if (maxAgeValue === null || value > maxAgeValue) {
+          maxAgeValue = value;
+        }
+      }
+    });
+
+    return maxAgeValue;
+  };
+
   useEffect(() => {
-    dispatch(fetchAndroidData());
-  }, [dispatch]);
+    // On component mount, set filters from saved filters
+    if (savedFilters) {
+      setPriceRange(savedFilters.priceRange || [10, 500000]);
+      setStorageOptions(savedFilters.storage || []);
+      setAgeOptions(savedFilters.age || []);
+    }
+  }, [savedFilters]);
 
-  if (androidLoading) {
-    return <Loader />;
-  }
+  useEffect(() => {
+    const storageQuery = storageOptions.join(",");
+    const ageQuery = getAgeValue(ageOptions);
 
-  if (androidError) {
-    return <Error502 />;
-  }
+    dispatch(
+      saveFilters({
+        priceRange,
+        storage: storageOptions,
+        age: ageOptions,
+      })
+    );
 
-  if (androidData.length === 0) {
-    return <NoData />;
-  }
+    dispatch(fetchAndroidData(1, priceRange, storageQuery, ageQuery));
+  }, [dispatch, priceRange, storageOptions, ageOptions]);
 
-  // Function to flatten and sort the variants
   // Sort data based on the selected sort option
   const sortedData = () => {
     let sortedVariants = [...androidData];
@@ -341,93 +378,102 @@ export default function Androids() {
           </Box>
         </Box>
         <Box width={{ base: "100%", lg: "70%" }}>
-          <Grid
-            templateColumns={{
-              base: "repeat(1, 1fr)",
-              sm: "repeat(2, 1fr)",
-              md: "repeat(2, 1fr)",
-              lg: "repeat(3, 1fr)",
-            }}
-            gap={6}
-          >
-            {sortedData().map((android, index) => (
-              <VStack
-                key={`${android.model}-${android.storage}-${index}`} // Unique key for each variant
-                spacing={3}
-                align="start"
-                p={4}
-                borderRadius="md"
-                position="relative"
-                cursor="pointer"
-                role="group"
-                onClick={() => handleItemClick(android._id)}
-              >
-                {/* Wrapper for image and hover button */}
-                <Box position="relative" w="full">
-                  <Image
-                    src={android.media[0] || Dummy} // Fallback image if not available
-                    alt={android.model}
-                    boxSize="full"
-                    objectFit="cover"
-                    height="350px"
-                    transition="all 0.3s ease"
-                    borderRadius="md"
-                  />
-                  {/* Add to Cart button, initially hidden */}
-                  <Button
-                    variant="none"
-                    position="absolute"
-                    bottom="4"
-                    left="50%"
-                    transform="translateX(-50%)"
-                    bg="#323232"
-                    color="white"
-                    borderRadius="10px"
-                    width="90%"
-                    opacity={0}
-                    transition="opacity 0.3s ease"
-                    _groupHover={{ opacity: 1 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const cartItem = {
-                        productId: android._id,
-                        name: android.model,
-                        color: android.color,
-                        storageOption: android.storage,
-                        price: android.price,
-                        originalPrice: android.originalPrice,
-                        priceOff: android.priceOff,
-                        quantity: 1,
-                        media: android.media[0] ? variant.media[0] : Dummy,
-                      };
-                      addToCart(cartItem);
-                    }}
-                  >
-                    Add to Cart
-                  </Button>
-                </Box>
-                <Text fontWeight="semibold">
-                  {`${android.model} - ${android.storage}, ${JSON.parse(
-                    android.color[0]
-                  )}`}
-                </Text>
-                <Text fontSize="lg" color="blue.600">
-                  ₹{android.price}
-                  <Text
-                    as="span"
-                    textDecoration="line-through"
-                    ml={2}
-                    color="gray"
-                  >
-                    ₹{android.originalPrice || "N/A"}
+          {/* Loading or Error State */}
+          {androidLoading ? (
+            <Loader /> // Show loader only within the product grid
+          ) : androidError ? (
+            <Error502 /> // Show error only within the product grid
+          ) : androidData.length === 0 ? (
+            <NoData /> // Handle empty data case
+          ) : (
+            <Grid
+              templateColumns={{
+                base: "repeat(1, 1fr)",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(2, 1fr)",
+                lg: "repeat(3, 1fr)",
+              }}
+              gap={6}
+            >
+              {sortedData().map((android, index) => (
+                <VStack
+                  key={`${android.model}-${android.storage}-${index}`} // Unique key for each variant
+                  spacing={3}
+                  align="start"
+                  p={4}
+                  borderRadius="md"
+                  position="relative"
+                  cursor="pointer"
+                  role="group"
+                  onClick={() => handleItemClick(android._id)}
+                >
+                  {/* Wrapper for image and hover button */}
+                  <Box position="relative" w="full">
+                    <Image
+                      src={android.media[0] || Dummy} // Fallback image if not available
+                      alt={android.model}
+                      boxSize="full"
+                      objectFit="cover"
+                      height="350px"
+                      transition="all 0.3s ease"
+                      borderRadius="md"
+                    />
+                    {/* Add to Cart button, initially hidden */}
+                    <Button
+                      variant="none"
+                      position="absolute"
+                      bottom="4"
+                      left="50%"
+                      transform="translateX(-50%)"
+                      bg="#323232"
+                      color="white"
+                      borderRadius="10px"
+                      width="90%"
+                      opacity={0}
+                      transition="opacity 0.3s ease"
+                      _groupHover={{ opacity: 1 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const cartItem = {
+                          productId: android._id,
+                          name: android.model,
+                          color: android.color[0],
+                          storageOption: android.storage,
+                          price: android.price,
+                          originalPrice: android.originalPrice,
+                          priceOff: android.priceOff,
+                          quantity: 1,
+                          media: android.media[0] ? android.media[0] : Dummy,
+                        };
+                        addToCart(cartItem);
+                      }}
+                    >
+                      Add to Cart
+                    </Button>
+                  </Box>
+                  <Text fontWeight="semibold">
+                    {`${android.model} - ${android.storage}, ${JSON.parse(
+                      android.color[0]
+                    )}`}
                   </Text>
-                  <Text as="span" color="red.500" ml={2}>
-                    ({android.priceOff || "0%"}% off)
+                  <Text fontSize="lg" color="blue.600">
+                    ₹{android.price}
+                    <Text
+                      as="span"
+                      textDecoration="line-through"
+                      ml={2}
+                      color="gray"
+                    >
+                      ₹{android.originalPrice || "N/A"}
+                    </Text>
+                    <Text as="span" color="red.500" ml={2}>
+                      ({android.priceOff || "0%"}% off)
+                    </Text>
                   </Text>
-                </Text>
-              </VStack>
-            ))}
-          </Grid>
+                </VStack>
+              ))}
+            </Grid>
+          )}
         </Box>
       </Box>
       {androidData.length >= 20 && (

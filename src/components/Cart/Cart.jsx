@@ -294,8 +294,8 @@ const Cart = () => {
           </Box>
           <Divider />
 
-          <Button mt={2} colorScheme="blue" size="lg" w="full">
-            Continue
+          <Button mt={2} colorScheme="blue" size="lg" w="full" onClick={() => navigate('/bag/checkout')}>
+          Continue
           </Button>
         </VStack>
       </Box>
