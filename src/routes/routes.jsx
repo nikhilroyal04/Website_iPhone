@@ -1,27 +1,28 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { Routes, Route } from "react-router-dom";
+import React, { useState, useEffect, Suspense, lazy } from "react";
+import { Routes, Route, useParams } from "react-router-dom";
 import FullLayout from "../layouts/FullLayouts";
-import Dashboard from "../components/Dashboard/Dashboard";
-// import Login from "../components/Auth/Login";
-// import SignUp from "../components/Auth/SignUp";
-import Logout from "../components/Auth/Logout";
-import Not_Found from "../components/NotFound/NotFound";
-import PrivacyPolicy from "../components/Docx/PrivacyPolicy";
-import Refund from "../components/Docx/Refund";
-import TandD from "../components/Docx/TandD";
-import Account from "../components/Account/Account";
-import Categories from "../components/Products/Categories/Categories";
-import IPhones from "../components/Products/iPhones/iPhones";
-import Androids from "../components/Products/androids/Androids";
-import Accessories from "../components/Products/accessories/Accessories";
-import Cart from "../components/Cart/Cart";
 import NetworkError from "../components/NotFound/NetworkError";
-import ADView from "../components/Products/androids/adView";
-import IView from "../components/Products/iPhones/iView";
-import AcView from "../components/Products/accessories/acView";
 import NotFound from "../components/NotFound/NotFound";
-import Stepper from "../components/Cart/Checkout/Stepper";
+import Loader from "../components/NotFound/Loader";
+
+// Lazy load components
+const Dashboard = lazy(() => import("../components/Dashboard/Dashboard"));
+// const Login = lazy(() => import("../components/Auth/Login"));
+// const SignUp = lazy(() => import("../components/Auth/SignUp"));
+const Logout = lazy(() => import("../components/Auth/Logout"));
+const PrivacyPolicy = lazy(() => import("../components/Docx/PrivacyPolicy"));
+const Refund = lazy(() => import("../components/Docx/Refund"));
+const TandD = lazy(() => import("../components/Docx/TandD"));
+const Account = lazy(() => import("../components/Account/Account"));
+const Categories = lazy(() => import("../components/Products/Categories/Categories"));
+const IPhones = lazy(() => import("../components/Products/iPhones/iPhones"));
+const Androids = lazy(() => import("../components/Products/androids/Androids"));
+const Accessories = lazy(() => import("../components/Products/accessories/Accessories"));
+const Cart = lazy(() => import("../components/Cart/Cart"));
+const Stepper = lazy(() => import("../components/Cart/Checkout/Stepper"));
+const ADView = lazy(() => import("../components/Products/androids/adView"));
+const IView = lazy(() => import("../components/Products/iPhones/iView"));
+const AcView = lazy(() => import("../components/Products/accessories/acView"));
 
 const Routing = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -46,32 +47,34 @@ const Routing = () => {
 
   // Render normal routing if online
   return (
-    <Routes>
-      {/* Authentication Routes */}
-      {/* <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} /> */}
-      <Route path="/logout" element={<Logout />} />
+    <Suspense fallback={<Loader/>}>
+      <Routes>
+        {/* Authentication Routes */}
+        {/* <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} */}
+        <Route path="/logout" element={<Logout />} />
 
-      {/* Main Layout Routes */}
-      <Route path="/" element={<FullLayout />}>
-        <Route index element={<Dashboard />} />
-        <Route path="/product" element={<Dashboard />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/refund-policy" element={<Refund />} />
-        <Route path="/terms_and_condition" element={<TandD />} />
-        <Route path="/bag" element={<Cart />} />
-        <Route path="/bag/checkout" element={<Stepper />} />
-        <Route path="/categories" element={<Categories />} />
-        <Route path="/categories/:name" element={<CategoryHandler />} />
-        <Route path="/categories/android/:id" element={<ADView />} />
-        <Route path="/categories/iPhone/:id" element={<IView />} />
-        <Route path="/categories/accessories/:id" element={<AcView />} />
-        <Route path="/account" element={<Account />} />
-      </Route>
+        {/* Main Layout Routes */}
+        <Route path="/" element={<FullLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="/product" element={<Dashboard />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/refund-policy" element={<Refund />} />
+          <Route path="/terms_and_condition" element={<TandD />} />
+          <Route path="/bag" element={<Cart />} />
+          <Route path="/bag/checkout" element={<Stepper />} />
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/categories/:name" element={<CategoryHandler />} />
+          <Route path="/categories/android/:id" element={<ADView />} />
+          <Route path="/categories/iPhone/:id" element={<IView />} />
+          <Route path="/categories/accessories/:id" element={<AcView />} />
+          <Route path="/account" element={<Account />} />
+        </Route>
 
-      {/* Fallback Route */}
-      <Route path="*" element={<Not_Found />} />
-    </Routes>
+        {/* Fallback Route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 };
 

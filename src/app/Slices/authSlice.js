@@ -1,12 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-import Cookies from "js-cookie";
+import { encrypt, decrypt } from '../../utils/cryptoUtils'; // Import the encryption utility
 
 // Initial state for the authentication slice
 const initialState = {
-  user: Cookies.get("user") ? JSON.parse(Cookies.get("user")) : null,  // Load user data from cookies
-  token: Cookies.get("authToken") || null,
-  tokenExpiry: Cookies.get("authTokenExpiry") || null,  // Store token expiry time in Unix
+  user: JSON.parse(localStorage.getItem("user")) || null, // Load user data from local storage
+  token: localStorage.getItem("authToken") || null,
+  tokenExpiry: localStorage.getItem("authTokenExpiry") || null, // Store token expiry time in Unix
   isLoading: false,
   error: null,
 };
@@ -22,14 +22,16 @@ const authSlice = createSlice({
     },
     loginSuccess: (state, action) => {
       const { user, token, tokenExpiry } = action.payload;
-      state.user = user;  // Set user data in the state
+      state.user = user; // Set user data in the state
       state.token = token;
       state.tokenExpiry = tokenExpiry;
       state.isLoading = false;
       state.error = null;
-      Cookies.set("authToken", token, { expires: new Date(tokenExpiry * 1000) });
-      Cookies.set("authTokenExpiry", tokenExpiry);
-      Cookies.set("user", JSON.stringify(user)); // Save user data in cookies
+
+      // Store encrypted data in local storage
+      localStorage.setItem("authToken", encrypt(token));
+      localStorage.setItem("authTokenExpiry", tokenExpiry);
+      localStorage.setItem("user", encrypt(user)); // Save user data in local storage
     },
     loginFailure: (state, action) => {
       state.isLoading = false;
@@ -41,9 +43,11 @@ const authSlice = createSlice({
       state.tokenExpiry = null;
       state.isLoading = false;
       state.error = null;
-      Cookies.remove("authToken");
-      Cookies.remove("authTokenExpiry");
-      Cookies.remove("user"); // Remove user data from cookies
+
+      // Remove data from local storage
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("authTokenExpiry");
+      localStorage.removeItem("user"); // Remove user data from local storage
     },
   },
 });
@@ -61,6 +65,7 @@ export const loginUser = (email, password) => async (dispatch) => {
       { withCredentials: true }
     );
 
+    console.log(response);
     const { token, tokenExpiry } = response.data.data;
 
     const headers = {

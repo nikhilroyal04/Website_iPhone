@@ -76,15 +76,15 @@ const SearchDrawer = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  if (categoryLoading) {
-    return <Loader />;
-  }
+  // if (categoryLoading) {
+  //   return <Loader />;
+  // }
 
   if (categoryError) {
     return <Error502 />;
   }
 
-  if (categoryLoading && categoryData.length === 0) {
+  if (!categoryLoading && categoryData.length === 0) {
     return <NoData />;
   }
 
