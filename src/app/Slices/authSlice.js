@@ -4,9 +4,9 @@ import { encrypt, decrypt } from '../../utils/cryptoUtils'; // Import the encryp
 
 // Initial state for the authentication slice
 const initialState = {
-  user: JSON.parse(localStorage.getItem("user")) || null, // Load user data from local storage
-  token: localStorage.getItem("authToken") || null,
-  tokenExpiry: localStorage.getItem("authTokenExpiry") || null, // Store token expiry time in Unix
+  user: JSON.parse(sessionStorage.getItem("user")) || null, // Load user data from local storage
+  token: sessionStorage.getItem("authToken") || null,
+  tokenExpiry: sessionStorage.getItem("authTokenExpiry") || null, // Store token expiry time in Unix
   isLoading: false,
   error: null,
 };
@@ -29,9 +29,9 @@ const authSlice = createSlice({
       state.error = null;
 
       // Store encrypted data in local storage
-      localStorage.setItem("authToken", encrypt(token));
-      localStorage.setItem("authTokenExpiry", tokenExpiry);
-      localStorage.setItem("user", encrypt(user)); // Save user data in local storage
+      sessionStorage.setItem("authToken", encrypt(token));
+      sessionStorage.setItem("authTokenExpiry", tokenExpiry);
+      sessionStorage.setItem("user", encrypt(user)); // Save user data in local storage
     },
     loginFailure: (state, action) => {
       state.isLoading = false;
@@ -45,9 +45,9 @@ const authSlice = createSlice({
       state.error = null;
 
       // Remove data from local storage
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("authTokenExpiry");
-      localStorage.removeItem("user"); // Remove user data from local storage
+      sessionStorage.removeItem("authToken");
+      sessionStorage.removeItem("authTokenExpiry");
+      sessionStorage.removeItem("user"); // Remove user data from local storage
     },
   },
 });
