@@ -24,7 +24,7 @@ import Loader from "../../NotFound/Loader";
 import Error502 from "../../NotFound/Error502";
 import Login from "../../Auth/Login";
 
-export default function AddressDetails() {
+export default function AddressDetails({ setOrderDetails, selectedAddress, setSelectedAddress }) {
   const dispatch = useDispatch();
   const userData = useSelector(selectUserData);
   const userDataError = useSelector(selectUserDataError);
@@ -33,7 +33,6 @@ export default function AddressDetails() {
   const userId = user ? user._id : null;
 
   const [isAddressOpen, setIsAddressOpen] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState(null);
   const [isLoginOpen, setIsLoginOpen] = useState(false); // Manage login modal state
 
   useEffect(() => {
@@ -50,6 +49,11 @@ export default function AddressDetails() {
   const handleAddNewAddress = () => {
     setSelectedAddress(null); // Clear selected address for new entry
     setIsAddressOpen(true);
+  };
+
+  const handleSelectAddress = (address) => {
+    setSelectedAddress(address); // Set the clicked address as selected
+    setOrderDetails({ shippingAddress: address }); // Pass the selected address to the parent
   };
 
   if (userDataLoading) {
@@ -115,41 +119,41 @@ export default function AddressDetails() {
 
         {/* Render User Addresses */}
         {userData?.addresses && userData.addresses.length > 0 ? (
-          userData.addresses.map((address) => (
-            <SimpleGrid
-              columns={{ base: 1, sm: 2, md: 3, lg: 3 }}
-              spacing={4}
-              width="100%"
+          <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 3 }} spacing={4} width="100%">
+            {/* Add New Address Button */}
+            <Box
+              p={4}
+              shadow="md"
+              borderWidth="1px"
+              borderRadius="md"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              borderStyle="dashed"
+              onClick={handleAddNewAddress}
+              cursor="pointer"
+              bg="white"
             >
-              {/* Add New Address Button */}
-              <Box
-                p={4}
-                shadow="md"
-                borderWidth="1px"
-                borderRadius="md"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                borderStyle="dashed"
-                onClick={handleAddNewAddress}
-                cursor="pointer"
-                bg="white"
-              >
-                <Center>
-                  <Icon as={AiOutlinePlus} boxSize={8} color="blue.600" />
-                  <Text ml={2} color="blue.600">
-                    Add New Address
-                  </Text>
-                </Center>
-              </Box>
+              <Center>
+                <Icon as={AiOutlinePlus} boxSize={8} color="blue.600" />
+                <Text ml={2} color="blue.600">
+                  Add New Address
+                </Text>
+              </Center>
+            </Box>
+
+            {userData.addresses.map((address) => (
               <Box
                 key={address._id}
                 p={5}
                 shadow="md"
-                borderWidth="1px"
+                borderWidth="2px"
                 borderRadius="md"
                 width="full"
                 bg="white"
+                cursor="pointer"
+                borderColor={selectedAddress && selectedAddress._id === address._id ? "blue.600" : "gray.200"} // Change border color if selected
+                onClick={() => handleSelectAddress(address)} // Select address on click
               >
                 <Text fontWeight="bold">{address.name}</Text>
                 <Text>{address.email}</Text>
@@ -168,8 +172,8 @@ export default function AddressDetails() {
                   </Button>
                 </HStack>
               </Box>
-            </SimpleGrid>
-          ))
+            ))}
+          </SimpleGrid>
         ) : (
           <Box width="100%" height="100%" mx="auto">
             <Text textAlign="center" fontSize="xl" fontWeight="400" mt={10}>

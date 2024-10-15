@@ -60,6 +60,17 @@ export default function IView() {
     }
   };
 
+  const convertAge = (months) => {
+    if (months > 24) {
+      return `2+ years`;
+    } else if (months > 12) {
+      const years = Math.floor(months / 12);
+      const remainingMonths = months % 12;
+      return `${years} year${years > 1 ? 's' : ''}${remainingMonths ? ` ${remainingMonths} month${remainingMonths > 1 ? 's' : ''}` : ''}`;
+    }
+    return `${months} month${months > 1 ? 's' : ''}`;
+  };
+
   return (
     <Box p={8} mt={14}>
       {/* Breadcrumb Navigation */}
@@ -266,46 +277,63 @@ export default function IView() {
 
       {/* Other Device Details */}
       {!loading && !error && iPhoneData && (
-        <Box mt={2} p={10} borderWidth="1px" borderRadius="lg">
-          <Text mt={1} fontWeight="bold" fontSize="xl">
+        <Box mt={2} p={10} borderWidth="1px" borderRadius="lg" boxShadow="md">
+          <Text mt={1} fontWeight="bold" fontSize="2xl" color="teal.600">
             Features:
           </Text>
           <ul>
             {JSON.parse(iPhoneData.features[0]).map((feature, index) => (
-              <li key={index}>
+              <Box
+                key={index}
+                p={3}
+                bg={index % 2 === 0 ? "gray.50" : "gray.100"}
+                borderRadius="md"
+                mt={2}
+              >
                 <Text mt={1}>- {feature}</Text>
-              </li>
+              </Box>
             ))}
           </ul>
 
-          <Heading as="h3" size="md" mt={5} mb={4}>
+          <Heading as="h3" size="md" mt={6} mb={4} color="blue.500">
             Device Details
           </Heading>
-          <Text>
-            Release Year: <strong>{iPhoneData.releaseYear}</strong>
-          </Text>
-          <Text>
-            Condition: <strong>{iPhoneData.condition}</strong>
-          </Text>
-          <Text>
-            Warranty: <strong>{iPhoneData.warranty}</strong>
-          </Text>
-          <Text>
-            Repaired: <strong>{iPhoneData.repaired}</strong>
-          </Text>
-          <Text>
-            Age: <strong>{iPhoneData.age}</strong>
-          </Text>
+          <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+            <Text>
+              Battery health: <strong>{iPhoneData.batteryHealth}%</strong>
+            </Text>
+            <Text>
+              Release Year: <strong>{iPhoneData.releaseYear}</strong>
+            </Text>
+            <Text>
+              Condition: <strong>{iPhoneData.condition}</strong>
+            </Text>
+            <Text>
+              Warranty: <strong>{iPhoneData.warranty}</strong>
+            </Text>
+            <Text>
+              Repaired: <strong>{JSON.parse(iPhoneData.repaired)}</strong>
+            </Text>
+            <Text>
+              Age: <strong>{convertAge(iPhoneData.age)}</strong>
+            </Text>
+          </Grid>
 
-          <Text mt={4} fontWeight="bold">
+          <Text mt={6} fontWeight="bold" fontSize="xl" color="purple.600">
             Add-Ons:
           </Text>
-          {iPhoneData.addOn.length > 0 && (
+          {iPhoneData.addOn[0].length > 0 && (
             <ul>
-              {iPhoneData.addOn.map((addOn, index) => (
-                <li key={index}>
+              {JSON.parse(iPhoneData.addOn[0]).map((addOn, index) => (
+                <Box
+                  key={index}
+                  p={3}
+                  bg={index % 2 === 0 ? "yellow.50" : "yellow.100"}
+                  borderRadius="md"
+                  mt={2}
+                >
                   <Text mt={1}>- {addOn}</Text>
-                </li>
+                </Box>
               ))}
             </ul>
           )}

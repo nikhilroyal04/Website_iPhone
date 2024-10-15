@@ -1,14 +1,18 @@
 import React, { useState } from "react";
 import { Box, Button, VStack, Text } from "@chakra-ui/react";
 import AddressSelection from "./AddressSelection";
+import { useNavigate } from "react-router-dom";
 import Payment from "./PaymentPage";
 import ThankYou from "./ThankYou";
 import { selectUser } from "../../../app/Slices/authSlice";
 import { useSelector } from "react-redux";
 
 const Stepper = () => {
+  const navigate = useNavigate();
   const user = useSelector(selectUser);
   const [currentStep, setCurrentStep] = useState(0);
+  const [error, setError] = useState("");
+  const [selectedAddress, setSelectedAddress] = useState(null); // Added selectedAddress state
 
   const [orderDetails, setOrderDetails] = useState({
     shippingAddress: {},
@@ -29,6 +33,8 @@ const Stepper = () => {
           setOrderDetails={(data) =>
             setOrderDetails((prev) => ({ ...prev, ...data }))
           }
+          selectedAddress={selectedAddress} // Pass selected address
+          setSelectedAddress={setSelectedAddress} // Pass setter for selected address
         />
       ),
     },
@@ -38,7 +44,7 @@ const Stepper = () => {
         <Payment
           orderDetails={orderDetails}
           setOrderDetails={(data) =>
-            setOrderDetails((prev) => ({ ...prev, ...data }))
+            setOrderDetails((prev) => ({ ...prev, paymentInfo: data }))
           }
         />
       ),
@@ -50,17 +56,33 @@ const Stepper = () => {
   ];
 
   const handleNext = () => {
+    if (currentStep === 0) {
+      if (
+        !orderDetails.shippingAddress ||
+        !orderDetails.shippingAddress.addressLine1
+      ) {
+        setError("Please select a address.");
+        return;
+      }
+    } else if (currentStep === 1) {
+      if (!orderDetails.paymentInfo || !orderDetails.paymentInfo.method) {
+        setError("Please enter payment information.");
+        return;
+      }
+    }
+
+    setError("");
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Here you can dispatch or send the orderDetails to your API
       console.log("Final Order Data:", orderDetails);
-      // Dispatch or send the data to the API
     }
   };
 
   const handleBack = () => {
-    if (currentStep > 0) {
+    if (currentStep === 0) {
+      navigate("/bag");
+    } else {
       setCurrentStep(currentStep - 1);
     }
   };
@@ -69,12 +91,18 @@ const Stepper = () => {
     <Box p={4}>
       <VStack spacing={6}>
         <Box>{steps[currentStep].component}</Box>
+
+        {error && (
+          <Text color="red.500" fontSize="md" mt={2}>
+            {error}
+          </Text>
+        )}
+
         {currentStep < steps.length - 1 &&
           user && ( // Show buttons only if not on the last step and user is logged in
             <Box mb={10} display="flex" justifyContent="center" width="full">
               <Button
                 onClick={handleBack}
-                isDisabled={currentStep === 0}
                 colorScheme="blue"
                 variant="solid"
                 size="lg"

@@ -342,7 +342,7 @@ const Cart = () => {
               ) : (
                 cartItems.map((item) => (
                   <Box
-                    key={item._id}
+                    key={item.id}
                     p={4}
                     borderWidth="1px"
                     borderRadius="md"

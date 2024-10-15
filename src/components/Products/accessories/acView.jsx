@@ -59,6 +59,8 @@ export default function AcView() {
     }
   };
 
+  console.log("data",accessoryData)
+
   return (
     <Box p={8} mt={14}>
       {/* Breadcrumb Navigation */}
@@ -252,18 +254,64 @@ export default function AcView() {
 
       {/* Other Device Details */}
       {!loading && !error && accessoryData && (
-        <Box mt={2} p={10} borderWidth="1px" borderRadius="lg">
-          <Heading as="h3" size="md" mt={5} mb={4}>
-            Device Details
-          </Heading>
+        <Box mt={2} p={10} borderWidth="1px" borderRadius="lg" boxShadow="md">
+        <Text mt={1} fontWeight="bold" fontSize="2xl" color="teal.600">
+          Features:
+        </Text>
+        <ul>
+          {JSON.parse(accessoryData.features[0]).map((feature, index) => (
+            <Box
+              key={index}
+              p={3}
+              bg={index % 2 === 0 ? "gray.50" : "gray.100"}
+              borderRadius="md"
+              mt={2}
+            >
+              <Text mt={1}>- {feature}</Text>
+            </Box>
+          ))}
+        </ul>
 
+        <Heading as="h3" size="md" mt={6} mb={4} color="blue.500">
+          Device Details
+        </Heading>
+        <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+          <Text>
+            Release Year: <strong>{accessoryData.releaseYear}</strong>
+          </Text>
           <Text>
             Condition: <strong>{accessoryData.condition}</strong>
           </Text>
           <Text>
             Warranty: <strong>{accessoryData.warranty}</strong>
           </Text>
-        </Box>
+          <Text>
+            Repaired: <strong>{(accessoryData.repaired)}</strong>
+          </Text>
+          <Text>
+            {/* Age: <strong>{convertAge(accessoryData.age)}</strong> */}
+          </Text>
+        </Grid>
+
+        <Text mt={6} fontWeight="bold" fontSize="xl" color="purple.600">
+          Add-Ons:
+        </Text>
+        {accessoryData.addOn[0].length > 0 && (
+          <ul>
+            {JSON.parse(accessoryData.addOn[0]).map((addOn, index) => (
+              <Box
+                key={index}
+                p={3}
+                bg={index % 2 === 0 ? "yellow.50" : "yellow.100"}
+                borderRadius="md"
+                mt={2}
+              >
+                <Text mt={1}>- {addOn}</Text>
+              </Box>
+            ))}
+          </ul>
+        )}
+      </Box>
       )}
     </Box>
   );

@@ -55,7 +55,7 @@ export default function AuthModal({ isOpen, onClose, onOpen }) {
       const response = await dispatch(loginUser(email, password));
 
       if (response && response.data) {
-        navigate("/account");
+        // navigate("/account");
         onClose();
       } else {
         toast({
