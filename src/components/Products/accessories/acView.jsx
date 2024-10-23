@@ -23,6 +23,10 @@ import {
   selectAccessoriesError,
   selectAccessoriesLoading,
 } from "../../../app/Slices/productSlice";
+import {
+  selectSelectedFeature,
+  fetchFeatureById,
+} from "../../../app/Slices/featureSlice";
 import Loader from "../../NotFound/Loader";
 import Error502 from "../../NotFound/Error502";
 import Dummy from "../../../assets/images/Dummy.jpg";
@@ -37,6 +41,7 @@ export default function AcView() {
   const [quantity, setQuantity] = useState(1);
 
   const accessoryData = useSelector(selectProductById);
+  const featureData = useSelector(selectSelectedFeature);
   const loading = useSelector(selectAccessoriesLoading);
   const error = useSelector(selectAccessoriesError);
 
@@ -45,8 +50,15 @@ export default function AcView() {
   }, [dispatch, id]);
 
   useEffect(() => {
-    setMainImage(accessoryData?.media[0] || Dummy); // Set default main image
-  }, [accessoryData]);
+    if (accessoryData?.media?.length > 0) {
+      setMainImage(accessoryData?.media[0] || Dummy);
+    }
+
+    // Dispatch to fetch the feature data after accessoryData is fetched
+    if (accessoryData?.features) {
+      dispatch(fetchFeatureById(accessoryData.features));
+    }
+  }, [accessoryData, dispatch]);
 
   const handleImageChange = (image) => {
     setMainImage(image);
@@ -58,8 +70,6 @@ export default function AcView() {
       setQuantity(selectedQuantity);
     }
   };
-
-  console.log("data",accessoryData)
 
   return (
     <Box p={8} mt={14}>
@@ -179,7 +189,7 @@ export default function AcView() {
                   }}
                   gap={4}
                 >
-                  {JSON.parse(accessoryData.color).map((color) => (
+                  {accessoryData.color.map((color) => (
                     <Button key={color} variant="outline">
                       {color}
                     </Button>
@@ -226,7 +236,7 @@ export default function AcView() {
                         const cartItem = {
                           productId: accessoryData._id,
                           name: accessoryData.model,
-                          color: JSON.parse(accessoryData.color[0]),
+                          color: accessoryData.color,
                           storageOption: "N/A",
                           price: accessoryData.price,
                           originalPrice: accessoryData.originalPrice,
@@ -255,63 +265,86 @@ export default function AcView() {
       {/* Other Device Details */}
       {!loading && !error && accessoryData && (
         <Box mt={2} p={10} borderWidth="1px" borderRadius="lg" boxShadow="md">
-        <Text mt={1} fontWeight="bold" fontSize="2xl" color="teal.600">
-          Features:
-        </Text>
-        <ul>
-          {JSON.parse(accessoryData.features[0]).map((feature, index) => (
-            <Box
-              key={index}
-              p={3}
-              bg={index % 2 === 0 ? "gray.50" : "gray.100"}
-              borderRadius="md"
-              mt={2}
-            >
-              <Text mt={1}>- {feature}</Text>
-            </Box>
-          ))}
-        </ul>
+          {featureData && (
+            <>
+              <Heading as="h2" fontSize="2xl" color="teal.600" mb={6}>
+                Key Features
+              </Heading>
+              {featureData.description.map((category, index) => (
+                <Box
+                  key={index}
+                  p={6}
+                  mb={6}
+                  borderWidth="1px"
+                  borderRadius="md"
+                  bg={index % 2 === 0 ? "gray.50" : "white"}
+                  boxShadow="sm"
+                >
+                  {/* Category Title */}
+                  <Heading as="h3" size="md" color="blue.600" mb={4}>
+                    {category.category}
+                  </Heading>
 
-        <Heading as="h3" size="md" mt={6} mb={4} color="blue.500">
-          Device Details
-        </Heading>
-        <Grid templateColumns="repeat(2, 1fr)" gap={4}>
-          <Text>
-            Release Year: <strong>{accessoryData.releaseYear}</strong>
-          </Text>
-          <Text>
-            Condition: <strong>{accessoryData.condition}</strong>
-          </Text>
-          <Text>
-            Warranty: <strong>{accessoryData.warranty}</strong>
-          </Text>
-          <Text>
-            Repaired: <strong>{(accessoryData.repaired)}</strong>
-          </Text>
-          <Text>
-            {/* Age: <strong>{convertAge(accessoryData.age)}</strong> */}
-          </Text>
-        </Grid>
+                  {/* Feature List */}
+                  <Flex direction="column" gap={2}>
+                    {category.features.map((feature, featureIndex) => (
+                      <Flex key={featureIndex} align="center" gap={2}>
+                        <Box
+                          as="span"
+                          boxSize="8px"
+                          bg="green.400"
+                          borderRadius="full"
+                          mt="2px"
+                        />
+                        <Text fontSize="md">{feature}</Text>
+                      </Flex>
+                    ))}
+                  </Flex>
+                </Box>
+              ))}
+            </>
+          )}
 
-        <Text mt={6} fontWeight="bold" fontSize="xl" color="purple.600">
-          Add-Ons:
-        </Text>
-        {accessoryData.addOn[0].length > 0 && (
-          <ul>
-            {JSON.parse(accessoryData.addOn[0]).map((addOn, index) => (
-              <Box
-                key={index}
-                p={3}
-                bg={index % 2 === 0 ? "yellow.50" : "yellow.100"}
-                borderRadius="md"
-                mt={2}
-              >
-                <Text mt={1}>- {addOn}</Text>
-              </Box>
-            ))}
-          </ul>
-        )}
-      </Box>
+          <Heading as="h3" size="md" mt={6} mb={4} color="blue.500">
+            Device Details
+          </Heading>
+          <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+            <Text>
+              Release Year: <strong>{accessoryData.releaseYear}</strong>
+            </Text>
+            <Text>
+              Condition: <strong>{accessoryData.condition}</strong>
+            </Text>
+            <Text>
+              Warranty: <strong>{accessoryData.warranty}</strong>
+            </Text>
+            <Text>
+              Repaired: <strong>{accessoryData.repaired}</strong>
+            </Text>
+            <Text>
+              {/* Age: <strong>{convertAge(accessoryData.age)}</strong> */}
+            </Text>
+          </Grid>
+
+          <Text mt={6} fontWeight="bold" fontSize="xl" color="purple.600">
+            Add-Ons:
+          </Text>
+          {accessoryData.addOn.length > 0 && (
+            <ul>
+              {accessoryData.addOn.map((addOn, index) => (
+                <Box
+                  key={index}
+                  p={3}
+                  bg={index % 2 === 0 ? "yellow.50" : "yellow.100"}
+                  borderRadius="md"
+                  mt={2}
+                >
+                  <Text mt={1}>- {addOn}</Text>
+                </Box>
+              ))}
+            </ul>
+          )}
+        </Box>
       )}
     </Box>
   );

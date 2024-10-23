@@ -18,10 +18,7 @@ import {
 } from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
 import { useDispatch } from "react-redux";
-import {
-  addUserAddress,
-  updateUserAddress,
-} from "../../app/Slices/userDataSlice";
+import { addAddress, editAddress } from "../../app/Slices/addressSlice";
 
 const states = [
   "Andhra Pradesh",
@@ -94,6 +91,7 @@ export default function Address({ isOpen, onClose, selectedAddress, userId }) {
 
   const handleSave = () => {
     const addressData = {
+      userId,
       name,
       phoneNumber,
       email,
@@ -106,9 +104,9 @@ export default function Address({ isOpen, onClose, selectedAddress, userId }) {
     };
 
     if (selectedAddress) {
-      dispatch(updateUserAddress(userId, selectedAddress._id, addressData));
+      dispatch(editAddress(selectedAddress._id, addressData));
     } else {
-      dispatch(addUserAddress(userId, addressData));
+      dispatch(addAddress(addressData));
     }
 
     clearFields();

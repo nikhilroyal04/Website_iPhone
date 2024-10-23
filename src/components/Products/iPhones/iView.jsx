@@ -23,6 +23,10 @@ import {
   selectIPhoneError,
   selectIPhoneLoading,
 } from "../../../app/Slices/productSlice";
+import {
+  selectSelectedFeature,
+  fetchFeatureById,
+} from "../../../app/Slices/featureSlice";
 import Loader from "../../NotFound/Loader";
 import Error502 from "../../NotFound/Error502";
 import Dummy from "../../../assets/images/Dummy.jpg";
@@ -38,6 +42,7 @@ export default function IView() {
   const [quantity, setQuantity] = useState(1);
 
   const iPhoneData = useSelector(selectProductById);
+  const featureData = useSelector(selectSelectedFeature);
   const loading = useSelector(selectIPhoneLoading);
   const error = useSelector(selectIPhoneError);
 
@@ -46,8 +51,15 @@ export default function IView() {
   }, [dispatch, id]);
 
   useEffect(() => {
-    setMainImage(iPhoneData?.media[0] || Dummy); // Set default main image
-  }, [iPhoneData]);
+    if (iPhoneData?.media?.length > 0) {
+      setMainImage(iPhoneData?.media[0] || Dummy);
+    }
+
+    // Dispatch to fetch the feature data after iPhoneData is fetched
+    if (iPhoneData?.features) {
+      dispatch(fetchFeatureById(iPhoneData.features));
+    }
+  }, [iPhoneData, dispatch]);
 
   const handleImageChange = (image) => {
     setMainImage(image);
@@ -66,9 +78,13 @@ export default function IView() {
     } else if (months > 12) {
       const years = Math.floor(months / 12);
       const remainingMonths = months % 12;
-      return `${years} year${years > 1 ? 's' : ''}${remainingMonths ? ` ${remainingMonths} month${remainingMonths > 1 ? 's' : ''}` : ''}`;
+      return `${years} year${years > 1 ? "s" : ""}${
+        remainingMonths
+          ? ` ${remainingMonths} month${remainingMonths > 1 ? "s" : ""}`
+          : ""
+      }`;
     }
-    return `${months} month${months > 1 ? 's' : ''}`;
+    return `${months} month${months > 1 ? "s" : ""}`;
   };
 
   return (
@@ -192,7 +208,7 @@ export default function IView() {
                   }}
                   gap={4}
                 >
-                  {JSON.parse(iPhoneData.color).map((color) => (
+                  {iPhoneData.color.map((color) => (
                     <Button variant="solid">{color}</Button>
                   ))}
                 </Grid>
@@ -249,7 +265,7 @@ export default function IView() {
                         const cartItem = {
                           productId: iPhoneData._id,
                           name: iPhoneData.model,
-                          color: JSON.parse(iPhoneData.color[0]),
+                          color: iPhoneData.color,
                           storageOption: iPhoneData.storage,
                           price: iPhoneData.price,
                           originalPrice: iPhoneData.originalPrice,
@@ -278,22 +294,45 @@ export default function IView() {
       {/* Other Device Details */}
       {!loading && !error && iPhoneData && (
         <Box mt={2} p={10} borderWidth="1px" borderRadius="lg" boxShadow="md">
-          <Text mt={1} fontWeight="bold" fontSize="2xl" color="teal.600">
-            Features:
-          </Text>
-          <ul>
-            {JSON.parse(iPhoneData.features[0]).map((feature, index) => (
-              <Box
-                key={index}
-                p={3}
-                bg={index % 2 === 0 ? "gray.50" : "gray.100"}
-                borderRadius="md"
-                mt={2}
-              >
-                <Text mt={1}>- {feature}</Text>
-              </Box>
-            ))}
-          </ul>
+          {featureData && (
+            <>
+              <Heading as="h2" fontSize="2xl" color="teal.600" mb={6}>
+                Key Features
+              </Heading>
+              {featureData.description.map((category, index) => (
+                <Box
+                  key={index}
+                  p={6}
+                  mb={6}
+                  borderWidth="1px"
+                  borderRadius="md"
+                  bg={index % 2 === 0 ? "gray.50" : "white"}
+                  boxShadow="sm"
+                >
+                  {/* Category Title */}
+                  <Heading as="h3" size="md" color="blue.600" mb={4}>
+                    {category.category}
+                  </Heading>
+
+                  {/* Feature List */}
+                  <Flex direction="column" gap={2}>
+                    {category.features.map((feature, featureIndex) => (
+                      <Flex key={featureIndex} align="center" gap={2}>
+                        <Box
+                          as="span"
+                          boxSize="8px"
+                          bg="green.400"
+                          borderRadius="full"
+                          mt="2px"
+                        />
+                        <Text fontSize="md">{feature}</Text>
+                      </Flex>
+                    ))}
+                  </Flex>
+                </Box>
+              ))}
+            </>
+          )}
 
           <Heading as="h3" size="md" mt={6} mb={4} color="blue.500">
             Device Details
@@ -312,7 +351,7 @@ export default function IView() {
               Warranty: <strong>{iPhoneData.warranty}</strong>
             </Text>
             <Text>
-              Repaired: <strong>{JSON.parse(iPhoneData.repaired)}</strong>
+              Repaired: <strong>{iPhoneData.repaired}</strong>
             </Text>
             <Text>
               Age: <strong>{convertAge(iPhoneData.age)}</strong>
@@ -322,9 +361,9 @@ export default function IView() {
           <Text mt={6} fontWeight="bold" fontSize="xl" color="purple.600">
             Add-Ons:
           </Text>
-          {iPhoneData.addOn[0].length > 0 && (
+          {iPhoneData.addOn.length > 0 && (
             <ul>
-              {JSON.parse(iPhoneData.addOn[0]).map((addOn, index) => (
+              {iPhoneData.addOn.map((addOn, index) => (
                 <Box
                   key={index}
                   p={3}

@@ -25,33 +25,39 @@ import Filter from "./Filter";
 import Address from "./Address";
 import Login from "../Auth/Login";
 import { useDispatch, useSelector } from "react-redux";
-import { selectUser, logout } from "../../app/Slices/authSlice";
+import { selectUser, logoutUser } from "../../app/Slices/authSlice";
 import {
-  selectUserData,
-  selectUserDataError,
-  selectUserDataLoading,
-  getUserDataItemsByUserId,
-  deleteUserAddress,
-} from "../../app/Slices/userDataSlice";
+  selectAddressError,
+  selectAddressLoading,
+  selectSelectedAddress,
+  fetchAddressByUserId,
+  deleteAddress,
+} from "../../app/Slices/addressSlice";
 import DeleteConfirmationModal from "./DeleteConfimationModal";
 import OrderDetailsModal from "./OrderDetailsModal";
 import TimeConversion from "../../utils/timeConversion";
 import Loader from "../NotFound/Loader";
 import Error502 from "../NotFound/Error502";
+import {
+  fetchOrderByUserId,
+  selectOrderData,
+} from "../../app/Slices/orderSlice";
 
 export default function Account() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const userData = useSelector(selectUserData);
-  const userDataError = useSelector(selectUserDataError);
-  const userDataLoading = useSelector(selectUserDataLoading);
+  const addressData = useSelector(selectSelectedAddress);
+  const orderData = useSelector(selectOrderData);
+  const addressError = useSelector(selectAddressError);
+  const addressLoading = useSelector(selectAddressLoading);
 
   const user = useSelector(selectUser);
-  const userId = user ? user._id : null;
+  const userId = user ? user.id : null;
 
   useEffect(() => {
     if (userId) {
-      dispatch(getUserDataItemsByUserId(userId));
+      dispatch(fetchAddressByUserId(userId));
+      dispatch(fetchOrderByUserId(userId));
     }
   }, [dispatch, userId]);
 
@@ -118,7 +124,7 @@ export default function Account() {
   };
 
   const handleSignOut = () => {
-    dispatch(logout());
+    dispatch(logoutUser());
     navigate("/"); // Redirect to home page after sign out
   };
 
@@ -132,7 +138,7 @@ export default function Account() {
   const confirmDelete = () => {
     if (addressToDelete) {
       // Dispatch action to delete the address
-      dispatch(deleteUserAddress(userId, addressToDelete));
+      dispatch(deleteAddress(addressToDelete));
 
       // Clear the address to delete and close the modal
       setAddressToDelete(null);
@@ -293,9 +299,9 @@ export default function Account() {
         {/* Main Content */}
         {(showSidebar === false || isLargeScreen) && (
           <Box width={{ base: "100%", lg: "70%" }} p={3}>
-            {userDataLoading && <Loader />}
-            {userDataError && <Error502 />}
-            {!userDataLoading && !userDataError && (
+            {addressLoading && <Loader />}
+            {addressError && <Error502 />}
+            {!addressLoading && !addressError && (
               <>
                 {selectedTab === "orders" && (
                   <>
@@ -319,8 +325,8 @@ export default function Account() {
 
                     {/* Render User Orders */}
                     <VStack spacing={4} align="start">
-                      {userData?.orders && userData.orders.length > 0 ? (
-                        userData.orders
+                      {orderData && orderData.length > 0 ? (
+                        orderData
                           .filter((order) =>
                             selectedFilter === "all"
                               ? true
@@ -393,8 +399,8 @@ export default function Account() {
                       spacing={4}
                       width="full"
                     >
-                      {userData?.addresses && userData.addresses.length > 0 ? (
-                        userData.addresses.map((address) => (
+                      {addressData && addressData.length > 0 ? (
+                        addressData.map((address) => (
                           <Box
                             key={address._id}
                             p={4}

@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
-  selectUserData,
-  selectUserDataError,
-  selectUserDataLoading,
-  getUserDataItemsByUserId,
-} from "../../../app/Slices/userDataSlice";
+  selectSelectedAddress,
+  selectAddressError,
+  selectAddressLoading,
+  fetchAddressByUserId,
+} from "../../../app/Slices/addressSlice";
 import { selectUser } from "../../../app/Slices/authSlice";
 import {
   Box,
@@ -24,20 +24,24 @@ import Loader from "../../NotFound/Loader";
 import Error502 from "../../NotFound/Error502";
 import Login from "../../Auth/Login";
 
-export default function AddressDetails({ setOrderDetails, selectedAddress, setSelectedAddress }) {
+export default function AddressDetails({
+  setOrderDetails,
+  selectedAddress,
+  setSelectedAddress,
+}) {
   const dispatch = useDispatch();
-  const userData = useSelector(selectUserData);
-  const userDataError = useSelector(selectUserDataError);
-  const userDataLoading = useSelector(selectUserDataLoading);
+  const addressData = useSelector(selectSelectedAddress);
+  const addressError = useSelector(selectAddressError);
+  const addressLoading = useSelector(selectAddressLoading);
   const user = useSelector(selectUser);
-  const userId = user ? user._id : null;
+  const userId = user ? user.id : null;
 
   const [isAddressOpen, setIsAddressOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false); // Manage login modal state
 
   useEffect(() => {
     if (userId) {
-      dispatch(getUserDataItemsByUserId(userId));
+      dispatch(fetchAddressByUserId(userId));
     }
   }, [dispatch, userId]);
 
@@ -56,11 +60,11 @@ export default function AddressDetails({ setOrderDetails, selectedAddress, setSe
     setOrderDetails({ shippingAddress: address }); // Pass the selected address to the parent
   };
 
-  if (userDataLoading) {
+  if (addressLoading) {
     return <Loader />;
   }
 
-  if (userDataError) {
+  if (addressError) {
     return <Error502 />;
   }
 
@@ -118,8 +122,12 @@ export default function AddressDetails({ setOrderDetails, selectedAddress, setSe
         </HStack>
 
         {/* Render User Addresses */}
-        {userData?.addresses && userData.addresses.length > 0 ? (
-          <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 3 }} spacing={4} width="100%">
+        {addressData && addressData.length > 0 ? (
+          <SimpleGrid
+            columns={{ base: 1, sm: 2, md: 3, lg: 3 }}
+            spacing={4}
+            width="100%"
+          >
             {/* Add New Address Button */}
             <Box
               p={4}
@@ -142,7 +150,7 @@ export default function AddressDetails({ setOrderDetails, selectedAddress, setSe
               </Center>
             </Box>
 
-            {userData.addresses.map((address) => (
+            {addressData.map((address) => (
               <Box
                 key={address._id}
                 p={5}
@@ -152,7 +160,11 @@ export default function AddressDetails({ setOrderDetails, selectedAddress, setSe
                 width="full"
                 bg="white"
                 cursor="pointer"
-                borderColor={selectedAddress && selectedAddress._id === address._id ? "blue.600" : "gray.200"} // Change border color if selected
+                borderColor={
+                  selectedAddress && selectedAddress._id === address._id
+                    ? "blue.600"
+                    : "gray.200"
+                } // Change border color if selected
                 onClick={() => handleSelectAddress(address)} // Select address on click
               >
                 <Text fontWeight="bold">{address.name}</Text>

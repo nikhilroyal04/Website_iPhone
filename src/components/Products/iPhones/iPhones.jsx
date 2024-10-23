@@ -506,7 +506,7 @@ export default function iPhones() {
                         const cartItem = {
                           productId: iPhoneData._id,
                           name: iPhoneData.model,
-                          color: iPhoneData.color[0],
+                          color: iPhoneData.color,
                           storageOption: iPhoneData.storage,
                           price: iPhoneData.price,
                           originalPrice: iPhoneData.originalPrice,
@@ -522,9 +522,7 @@ export default function iPhones() {
                       Add to Cart
                     </Button>
                   </Box>
-                  <Text fontWeight="semibold">{`${iPhoneData.model} - ${
-                    iPhoneData.storage
-                  }, ${JSON.parse(iPhoneData.color[0])}`}</Text>
+                  <Text fontWeight="semibold">{`${iPhoneData.model} - ${iPhoneData.storage}, ${iPhoneData.color}`}</Text>
                   {/* Display price and details */}
                   <Text fontSize="lg" color="blue.600">
                     ₹{iPhoneData.price}

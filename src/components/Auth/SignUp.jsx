@@ -7,7 +7,10 @@ import {
   Button,
   Text,
   Link,
+  InputGroup,
+  InputLeftElement,
 } from "@chakra-ui/react";
+import { HiUser, HiMail, HiLockClosed, HiPhone } from "react-icons/hi"; // Importing icons
 
 export default function SignUp() {
   const [name, setName] = useState("");
@@ -37,45 +40,65 @@ export default function SignUp() {
       {/* Name Field */}
       <FormControl id="name" mb={4} isRequired>
         <FormLabel>Name</FormLabel>
-        <Input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Enter your name"
-        />
+        <InputGroup>
+          <InputLeftElement pointerEvents="none">
+            <HiUser color="gray.300" />
+          </InputLeftElement>
+          <Input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter your name"
+          />
+        </InputGroup>
       </FormControl>
 
       {/* Email Field */}
       <FormControl id="email" mb={4} isRequired>
         <FormLabel>Email address</FormLabel>
-        <Input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email"
-        />
+        <InputGroup>
+          <InputLeftElement pointerEvents="none">
+            <HiMail color="gray.300" />
+          </InputLeftElement>
+          <Input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
+          />
+        </InputGroup>
       </FormControl>
 
       {/* Password Field */}
       <FormControl id="password" mb={4} isRequired>
         <FormLabel>Password</FormLabel>
-        <Input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Enter your password"
-        />
+        <InputGroup>
+          <InputLeftElement pointerEvents="none">
+            <HiLockClosed color="gray.300" />
+          </InputLeftElement>
+          <Input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
+          />
+        </InputGroup>
       </FormControl>
 
       {/* Phone Number Field */}
       <FormControl id="phone" mb={4} isRequired>
         <FormLabel>Phone Number</FormLabel>
-        <Input
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="Enter your phone number"
-        />
+        <InputGroup>
+          <InputLeftElement pointerEvents="none">
+            <HiPhone color="gray.300" />
+          </InputLeftElement>
+          <Input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Enter your phone number"
+          />
+        </InputGroup>
       </FormControl>
 
       {/* Sign Up Button */}

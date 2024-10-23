@@ -13,7 +13,6 @@ import Error502 from "../../NotFound/Error502";
 import Loader from "../../NotFound/Loader";
 import Dummy from "../../../assets/images/Dummy.jpg";
 
-
 const Category = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();

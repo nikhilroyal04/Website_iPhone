@@ -440,7 +440,7 @@ export default function Product() {
                         const cartItem = {
                           productId: accessory._id,
                           name: accessory.model,
-                          color: accessory.color[0],
+                          color: accessory.color,
                           storageOption: "N/A",
                           price: accessory.price,
                           originalPrice: accessory.originalPrice,
@@ -457,7 +457,7 @@ export default function Product() {
                     </Button>
                   </Box>
                   <Text fontWeight="semibold">
-                    {accessory.model}- {JSON.parse(accessory.color[0])}
+                    {accessory.model}- {accessory.color}
                   </Text>
                   <Text fontSize="lg" color="blue.600">
                     ₹{accessory.price}

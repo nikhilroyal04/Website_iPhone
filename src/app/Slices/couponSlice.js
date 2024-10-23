@@ -10,7 +10,7 @@ const couponSlice = createSlice({
   },
   reducers: {
     setcouponData: (state, action) => {
-      state.data = action.payload;
+      state.data = action.payload.coupons;
       state.isLoading = false;
       state.error = null;
     },

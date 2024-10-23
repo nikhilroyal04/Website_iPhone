@@ -437,7 +437,7 @@ export default function Androids() {
                         const cartItem = {
                           productId: android._id,
                           name: android.model,
-                          color: android.color[0],
+                          color: android.color,
                           storageOption: android.storage,
                           price: android.price,
                           originalPrice: android.originalPrice,
@@ -452,9 +452,7 @@ export default function Androids() {
                     </Button>
                   </Box>
                   <Text fontWeight="semibold">
-                    {`${android.model} - ${android.storage}, ${JSON.parse(
-                      android.color[0]
-                    )}`}
+                    {`${android.model} - ${android.storage}, ${android.color}`}
                   </Text>
                   <Text fontSize="lg" color="blue.600">
                     ₹{android.price}

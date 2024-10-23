@@ -34,10 +34,6 @@ const Pro2 = () => {
     return <Error502 />;
   }
 
-  if (AccessoryLoading && AccessoryData.length === 0) {
-    return <NoData />;
-  }
-
   const handleItemClick = (id) => {
     navigate(`/categories/Accessories/${id}`);
   };
@@ -59,13 +55,13 @@ const Pro2 = () => {
         {AccessoryData.map((Accessory) => {
           // Use the first image from media[] if available, otherwise use a placeholder image
           const imageUrl =
-            Accessory.media.length > 0 ? Accessory.media[0] : Dummy;
+            Accessory.media?.length > 0 ? Accessory.media[0] : Dummy;
 
           const cartItem = {
             productId: Accessory._id,
             model: Accessory.model,
-            color: Accessory.color,
-            storageOption: "N/A",
+            color: Accessory.color || ["N/A"],
+            storageOption: Accessory.storage || "Unknown",
             price: Accessory.price,
             originalPrice: Accessory.originalPrice,
             priceOff: Accessory.priceOff,
@@ -89,7 +85,7 @@ const Pro2 = () => {
               {/* Wrapper for image and hover button */}
               <Box position="relative" w="full">
                 <Image
-                  src={imageUrl || Dummy}
+                  src={imageUrl}
                   alt={`Product ${Accessory.name}`}
                   boxSize="full"
                   objectFit="cover"
@@ -98,6 +94,7 @@ const Pro2 = () => {
                   _groupHover={{
                     borderRadius: "15px",
                   }}
+                  fallbackSrc={Dummy}
                 />
                 {/* Add to Cart button, initially hidden */}
                 <Button
@@ -122,9 +119,7 @@ const Pro2 = () => {
                 </Button>
               </Box>
               <Text fontWeight="semibold">{`${Accessory.model}- ${
-                Accessory.color.length > 0
-                  ? JSON.parse(Accessory.color[0])
-                  : "N/A"
+                Accessory.color.length > 0 ? Accessory.color : "N/A"
               }`}</Text>
               <Text fontSize="lg" color="blue.600">
                 ₹{Accessory.price}

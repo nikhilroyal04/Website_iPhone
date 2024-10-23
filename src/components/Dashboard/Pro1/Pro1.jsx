@@ -58,13 +58,13 @@ const Pro1 = () => {
       >
         {iPhoneData.map((iPhone) => {
           // Use the first image from media[] if available, otherwise use placeholder
-          const imageUrl = iPhone.media.length > 0 ? iPhone.media[0] : Dummy;
+          const imageUrl = iPhone.media?.length > 0 ? iPhone.media[0] : Dummy;
 
           const cartItem = {
             productId: iPhone._id,
             name: iPhone.model,
-            color: iPhone.color,
-            storageOption: iPhone.storage,
+            color: iPhone.color || ["N/A"],
+            storageOption: iPhone.storage || "Unknown",
             price: iPhone.price,
             originalPrice: iPhone.originalPrice,
             priceOff: iPhone.priceOff,
@@ -88,7 +88,7 @@ const Pro1 = () => {
               {/* Wrapper for image and hover button */}
               <Box position="relative" w="full">
                 <Image
-                  src={imageUrl || Dummy}
+                  src={imageUrl}
                   alt={`Product ${iPhone.model}`}
                   boxSize="full"
                   objectFit="cover"
@@ -97,6 +97,7 @@ const Pro1 = () => {
                   _groupHover={{
                     borderRadius: "15px",
                   }}
+                  fallbackSrc={Dummy} 
                 />
                 {/* Add to Cart button, initially hidden */}
                 <Button
@@ -121,10 +122,8 @@ const Pro1 = () => {
                 </Button>
               </Box>
               <Text fontWeight="semibold">{`${iPhone.model} - ${
-                iPhone.storage
-              }, ${
-                iPhone.color.length > 0 ? JSON.parse(iPhone.color[0]) : "N/A"
-              }`}</Text>
+                iPhone.storage || "Unknown"
+              }, ${iPhone.color.length > 0 ? iPhone.color : "N/A"}`}</Text>
               <Text fontSize="lg" color="blue.600">
                 ₹{iPhone.price}
                 {iPhone.originalPrice && (

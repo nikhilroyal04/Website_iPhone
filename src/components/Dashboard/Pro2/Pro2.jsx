@@ -63,8 +63,8 @@ const Pro2 = () => {
           const cartItem = {
             productId: android._id,
             name: android.model,
-            color: android.color,
-            storageOption: android.storage,
+            color: android.color || ["N/A"],
+            storageOption: android.storage || "Unknown",
             price: android.price,
             originalPrice: android.originalPrice,
             priceOff: android.priceOff,
@@ -88,7 +88,7 @@ const Pro2 = () => {
               {/* Wrapper for image and hover button */}
               <Box position="relative" w="full">
                 <Image
-                  src={imageUrl || Dummy}
+                  src={imageUrl}
                   alt={`Product ${android.model}`}
                   boxSize="full"
                   height="350px"
@@ -97,6 +97,7 @@ const Pro2 = () => {
                   _groupHover={{
                     borderRadius: "15px",
                   }}
+                  fallbackSrc={Dummy}
                 />
                 {/* Add to Cart button, initially hidden */}
                 <Button
@@ -122,9 +123,7 @@ const Pro2 = () => {
               </Box>
               <Text fontWeight="semibold">{`${android.model} - ${
                 android.storage
-              }, ${
-                android.color.length > 0 ? JSON.parse(android.color[0]) : "N/A"
-              }`}</Text>
+              }, ${android.color.length > 0 ? android.color : "N/A"}`}</Text>
               <Text fontSize="lg" color="blue.600">
                 ₹{android.price}
                 {android.originalPrice && (

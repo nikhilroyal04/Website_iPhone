@@ -10,62 +10,59 @@ import {
   FormControl,
   FormLabel,
   Input,
+  InputGroup,
+  InputLeftElement,
   Text,
   Link,
   useToast,
+  IconButton,
+  InputRightElement,
 } from "@chakra-ui/react";
+import {
+  HiUser,
+  HiLockClosed,
+  HiEye,
+  HiEyeOff,
+  HiMail,
+  HiPhone,
+} from "react-icons/hi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { addUser } from "../../app/Slices/userSlice";
 import {
   loginUser,
   selectIsLoading,
   selectError,
   selectUser,
-  logout,
-  isTokenExpired,
+  selectIsLoggedIn,
 } from "../../app/Slices/authSlice";
-import { addUser } from "../../app/Slices/userSlice";
 
-export default function AuthModal({ isOpen, onClose, onOpen }) {
+export default function Login({ isOpen, onClose, onOpen }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // State for password visibility
+
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const isLoading = useSelector(selectIsLoading);
   const error = useSelector(selectError);
   const user = useSelector(selectUser);
+  const isLoggedIn = useSelector(selectIsLoggedIn);
   const toast = useToast();
-  const tokenExpired = useSelector(isTokenExpired);
 
   useEffect(() => {
-    if (tokenExpired) {
-      dispatch(logout());
-    }
-    if (location.pathname === "/account" && !user) {
+    if (!isLoggedIn && location.pathname === "/account") {
       onOpen(); // Auto-open the modal when navigating to /account if not logged in
     }
-  }, [location.pathname, user, tokenExpired, onOpen, dispatch]);
+  }, [location.pathname, isLoggedIn, onOpen]);
 
   const handleLogin = async () => {
     try {
-      const response = await dispatch(loginUser(email, password));
-
-      if (response && response.data) {
-        // navigate("/account");
-        onClose();
-      } else {
-        toast({
-          title: "Invalid Credentials",
-          description: "Login failed, please check email and password.",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
-      }
+      await dispatch(loginUser({ email, password }));
     } catch (err) {
       toast({
         title: "Login Failed",
@@ -90,8 +87,7 @@ export default function AuthModal({ isOpen, onClose, onOpen }) {
 
       const response = await dispatch(addUser(userData));
 
-      // Check if the signup was successful
-      if (response && response.statusCode === 201) {
+      if (response?.statusCode === 201) {
         toast({
           title: "Sign Up Successful",
           description: "Now you can login.",
@@ -118,7 +114,6 @@ export default function AuthModal({ isOpen, onClose, onOpen }) {
         });
       }
     } catch (err) {
-      console.error("Sign Up Error:", err); // Log the error
       toast({
         title: "Sign Up Failed",
         description: error || "An unexpected error occurred during signup.",
@@ -146,7 +141,7 @@ export default function AuthModal({ isOpen, onClose, onOpen }) {
     setPhone(""); // Clear phone on toggle
   };
 
-  if (user) {
+  if (isLoggedIn) {
     return null; // Do not render modal if user is logged in
   }
 
@@ -163,49 +158,83 @@ export default function AuthModal({ isOpen, onClose, onOpen }) {
             {isSignUp && (
               <FormControl id="name" mb={4} isRequired>
                 <FormLabel>Name</FormLabel>
-                <Input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter your name"
-                  isDisabled={isLoading}
-                />
+                <InputGroup>
+                  <InputLeftElement pointerEvents="none">
+                    <HiUser color="gray.300" />
+                  </InputLeftElement>
+                  <Input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter your name"
+                  />
+                </InputGroup>
               </FormControl>
             )}
 
             {isSignUp && (
               <FormControl id="phone" mb={4} isRequired>
                 <FormLabel>Phone Number</FormLabel>
-                <Input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Enter your phone number"
-                  isDisabled={isLoading}
-                />
+                <InputGroup>
+                  <InputLeftElement pointerEvents="none">
+                    <HiPhone color="gray.300" />
+                  </InputLeftElement>
+                  <Input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="Enter your phone number"
+                  />
+                </InputGroup>
               </FormControl>
             )}
 
             <FormControl id="email" mb={4} isRequired>
               <FormLabel>Email address</FormLabel>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                isDisabled={isLoading}
-              />
+              <InputGroup>
+                <InputLeftElement pointerEvents="none">
+                  <HiMail color="gray.300" />
+                </InputLeftElement>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                />
+              </InputGroup>
             </FormControl>
 
             <FormControl id="password" mb={4} isRequired>
               <FormLabel>Password</FormLabel>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                isDisabled={isLoading}
-              />
+              <InputGroup>
+                <InputLeftElement pointerEvents="none">
+                  <HiLockClosed color="gray.300" />
+                </InputLeftElement>
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  isDisabled={isLoading}
+                />
+                <InputRightElement>
+                  <IconButton
+                    variant="link"
+                    onClick={() => setShowPassword(!showPassword)}
+                    icon={
+                      showPassword ? (
+                        <HiEyeOff color="gray.500" />
+                      ) : (
+                        <HiEye color="gray.500" />
+                      )
+                    }
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                    size="md"
+                  />
+                </InputRightElement>
+              </InputGroup>
             </FormControl>
 
             {!isSignUp && (

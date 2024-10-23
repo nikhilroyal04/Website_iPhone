@@ -23,6 +23,10 @@ import {
   selectAndroidError,
   selectAndroidLoading,
 } from "../../../app/Slices/productSlice";
+import {
+  selectSelectedFeature,
+  fetchFeatureById,
+} from "../../../app/Slices/featureSlice";
 import Loader from "../../NotFound/Loader";
 import Error502 from "../../NotFound/Error502";
 import Dummy from "../../../assets/images/Dummy.jpg";
@@ -37,6 +41,7 @@ export default function AdView() {
   const [quantity, setQuantity] = useState(1);
 
   const androidData = useSelector(selectProductById);
+  const featureData = useSelector(selectSelectedFeature);
   const loading = useSelector(selectAndroidLoading);
   const error = useSelector(selectAndroidError);
 
@@ -45,8 +50,15 @@ export default function AdView() {
   }, [dispatch, id]);
 
   useEffect(() => {
-    setMainImage(androidData?.media[0] || Dummy); // Default main image
-  }, [androidData]);
+    if (androidData?.media?.length > 0) {
+      setMainImage(androidData?.media[0] || Dummy);
+    }
+
+    // Dispatch to fetch the feature data after androidData is fetched
+    if (androidData?.features) {
+      dispatch(fetchFeatureById(androidData.features));
+    }
+  }, [androidData, dispatch]);
 
   const handleImageChange = (image) => {
     setMainImage(image);
@@ -180,7 +192,7 @@ export default function AdView() {
                   }}
                   gap={4}
                 >
-                  {JSON.parse(androidData.color).map((color) => (
+                  {androidData.color.map((color) => (
                     <Button key={color} variant="solid">
                       {color}
                     </Button>
@@ -235,7 +247,7 @@ export default function AdView() {
                         const cartItem = {
                           productId: androidData._id,
                           name: androidData.model,
-                          color: JSON.parse(androidData.color[0]),
+                          color: androidData.color,
                           storageOption: androidData.storage,
                           price: androidData.price,
                           originalPrice: androidData.originalPrice,
@@ -264,22 +276,45 @@ export default function AdView() {
       {/* Other Device Details */}
       {!loading && !error && androidData && (
         <Box mt={2} p={10} borderWidth="1px" borderRadius="lg" boxShadow="md">
-          <Text mt={1} fontWeight="bold" fontSize="2xl" color="teal.600">
-            Features:
-          </Text>
-          <ul>
-            {JSON.parse(androidData.features[0]).map((feature, index) => (
-              <Box
-                key={index}
-                p={3}
-                bg={index % 2 === 0 ? "gray.50" : "gray.100"}
-                borderRadius="md"
-                mt={2}
-              >
-                <Text mt={1}>- {feature}</Text>
-              </Box>
-            ))}
-          </ul>
+          {featureData && (
+            <>
+              <Heading as="h2" fontSize="2xl" color="teal.600" mb={6}>
+                Key Features
+              </Heading>
+              {featureData.description.map((category, index) => (
+                <Box
+                  key={index}
+                  p={6}
+                  mb={6}
+                  borderWidth="1px"
+                  borderRadius="md"
+                  bg={index % 2 === 0 ? "gray.50" : "white"}
+                  boxShadow="sm"
+                >
+                  {/* Category Title */}
+                  <Heading as="h3" size="md" color="blue.600" mb={4}>
+                    {category.category}
+                  </Heading>
+
+                  {/* Feature List */}
+                  <Flex direction="column" gap={2}>
+                    {category.features.map((feature, featureIndex) => (
+                      <Flex key={featureIndex} align="center" gap={2}>
+                        <Box
+                          as="span"
+                          boxSize="8px"
+                          bg="green.400"
+                          borderRadius="full"
+                          mt="2px"
+                        />
+                        <Text fontSize="md">{feature}</Text>
+                      </Flex>
+                    ))}
+                  </Flex>
+                </Box>
+              ))}
+            </>
+          )}
 
           <Heading as="h3" size="md" mt={6} mb={4} color="blue.500">
             Device Details
@@ -295,7 +330,7 @@ export default function AdView() {
               Warranty: <strong>{androidData.warranty}</strong>
             </Text>
             <Text>
-              Repaired: <strong>{JSON.parse(androidData.repaired)}</strong>
+              Repaired: <strong>{androidData.repaired}</strong>
             </Text>
             <Text>
               Age: <strong>{convertAge(androidData.age)}</strong>
@@ -305,9 +340,9 @@ export default function AdView() {
           <Text mt={6} fontWeight="bold" fontSize="xl" color="purple.600">
             Add-Ons:
           </Text>
-          {androidData.addOn[0].length > 0 && (
+          {androidData.addOn.length > 0 && (
             <ul>
-              {JSON.parse(androidData.addOn[0]).map((addOn, index) => (
+              {androidData.addOn.map((addOn, index) => (
                 <Box
                   key={index}
                   p={3}
