@@ -187,7 +187,7 @@ const SearchDrawer = ({ isOpen, onClose }) => {
                               <Box>
                                 <Text fontSize="md" fontWeight="600">
                                   {result.model || result.name} -{" "}
-                                  {JSON.parse(result.color[0])}
+                                  {(result.color)}
                                 </Text>
                                 <Text fontSize="md" color="gray.600">
                                   Storage: {result.storage}
